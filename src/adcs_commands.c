@@ -19,10 +19,11 @@
 
 #include <adcs_commands.h>
 #include <adcs_types.h>
+#include <adcs_io.h>
 
 Common_Telecommand_IDs common_telecommand_IDs;
 
-ADCS_returnState send(uint8_t * command, uint8_t length) {
+ADCS_returnState adcs_telecommand(uint8_t * command, uint8_t length) {
   return ADCS_ok;
 }
 
@@ -30,29 +31,29 @@ ADCS_returnState reset() {
   uint8_t command[2];
   command[0] = common_telecommand_IDs.reset;
   command[1] = 0x5A; // Magic number
-  return send(&command, 2);
+  return adcs_telecommand(&command, 2);
 }
 
 ADCS_returnState reset_log_pointer() {
   uint8_t command = common_telecommand_IDs.reset_log_pointer;
-  return send(&command, 1);
+  return adcs_telecommand(&command, 1);
 }
 
 ADCS_returnState advance_log_pointer() {
   uint8_t command = common_telecommand_IDs.advance_log_pointer;
-  return send(&command, 1);
+  return adcs_telecommand(&command, 1);
 }
 
 ADCS_returnState reset_boot_registers() {
   uint8_t command = common_telecommand_IDs.reset_boot_registers;
-  return send(&command, 1);
+  return adcs_telecommand(&command, 1);
 }
 
 ADCS_returnState format_sd_card() {
   uint8_t command[2];
   command[0] = common_telecommand_IDs.format_sd_card;
   command[1] = 0x5A; // magic number
-  return send(&command, 2);
+  return adcs_telecommand(&command, 2);
 }
 
 ADCS_returnState erase_file(File_Type file_type, uint8_t file_counter, bool erase_all) {
@@ -61,5 +62,5 @@ ADCS_returnState erase_file(File_Type file_type, uint8_t file_counter, bool eras
   command[1] = file_type;
   command[2] = file_counter;
   command[3] = erase_all;
-  return send(&command, 4);
+  return adcs_telecommand(&command, 4);
 }

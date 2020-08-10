@@ -19,6 +19,27 @@
 
 #include <adcs_commands.h>
 
-ADCS_returnState send(uint8_t* command, uint8_t length) {
+static i2cBASE_t* i2c;
+static uint8_t I2C_Write_Addr 0xAE;
+static uint8_t I2C_Read_Addr 0xAF;
+
+void adcs_i2c_init(i2cBASE_t* i2c_reg) {
+  i2c = i2c_reg;
+  i2cSetMode(i2c, I2C_MASTER);
+  return;
+}
+
+ADCS_returnState adcs_telecommand(uint8_t* command, uint8_t length) {
   return ADCS_ok;
+}
+
+void adcs_i2c_telecommand(uint8_t* command, uint8_t length) {
+  i2cSetSlaveAdd(i2c, I2C_Write_Addr);
+  i2cSetDirection(i2c, I2C_TRANSMITTER);
+  i2cSetStart(i2c);
+  i2cSendByte(i2c, I2C_Write_Addr); // send write address and then command ID+data
+  i2cSend(i2c, (uint32_t) length, command);
+  i2cSetStop(i2c);
+  // TODO: get the Acknowledgement
+  return;
 }
