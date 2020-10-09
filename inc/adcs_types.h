@@ -17,33 +17,35 @@
 
 const char Telemetery_Request = 1, Telecommand = 0, TC_TR_Mask = 0x80;
 
-enum ADCS_returnState {
+const char MAGIC_NUMBER = 0x5A;
+
+typedef enum ADCS_returnState {
   ADCS_ok,
   ADCS_send_failed
 } ADCS_returnState;
 
 typedef enum File_Type {
-  telemetery_log = 2,
-  JPG_image,
-  BMP_image,
-  index = 15
+  FILE_TYPE_TELEMETERY_LOG    = 2,
+  FILE_TYPE_JPG_IMAGE         = 3,
+  FILE_TYPE_BMP_IMAGE         = 4,
+  FILE_TYPE_INDEX             = 15
 } File_Type;
 
-typedef struct Common_Telecommand_IDs {
-  uint8_t reset     = 1, // perform a reset
-  reset_log_pointer       = 4, // reset pointer to log buffer
-  advance_log_pointer     = 5,
-  reset_boot_registers    = 6,
-  format_sd_card          = 33,
-  erase_file              = 108,
-  load_file_download_block= 112, // fill download buffer with file contents
-  advance_file_list_read_pointer = 113,
-  initiate_file_upload    = 114,
-  file_upload_packet      = 115,
-  finalize_upload_block   = 116,
-  reset_upload_block      = 117, // reset holemap for upload block
-  reset_file_list_read_pointer = 118,
-  initiate_download_burst = 119
+typedef enum Common_Telecommand_IDs {
+  RESET_ID                           = 1,    // perform a reset
+  RESET_LOG_POINTER_ID               = 4,    // reset pointer to log buffer
+  ADVANCE_LOG_POINTER_ID             = 5,    
+  RESET_BOOT_REGISTERS_ID            = 6,
+  FORMAT_SD_CARD_ID                  = 33,
+  ERASE_FILE_ID                      = 108,
+  LOAD_FILE_DOWNLOAD_BLOCK_ID        = 112,  // fill download buffer with file contents
+  ADVANCE_FILE_LIST_READ_POINTER_ID  = 113,
+  INITIATE_FILE_UPLOAD_ID            = 114,
+  FILE_UPLOAD_PACKET_ID              = 115,
+  FINALIZE_UPLOAD_BLOCK_ID           = 116,
+  RESET_UPLOAD_BLOCK_ID              = 117,  // reset holemap for upload block
+  RESET_FILE_LIST_READ_POINTER_ID    = 118,
+  INITIATE_DOWNLOAD_BURST_ID         = 119
 } Common_Telecommand_IDs;
 
 #endif /* ADCS_TYPES_H */

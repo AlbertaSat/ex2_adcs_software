@@ -17,7 +17,8 @@
 * @date 2020-08-09
 */
 
-#include <adcs_commands.h>
+#include <adcs_handler.h>
+#include <adcs_types.h>
 
 static i2cBASE_t* i2c;
 static uint8_t I2C_Write_Addr 0xAE;

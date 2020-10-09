@@ -12,19 +12,24 @@
  * GNU General Public License for more details.
  */
 
-#ifndef ADCS_COMMANDS_H
-#define ADCS_COMMANDS_H
+#ifndef ADCS_HANDLER_H
+#define ADCS_HANDLER_H
 
-ADCS_returnState reset();
+#include <stdint.h>
 
-ADCS_returnState reset_log_pointer();
+ADCS_returnState adcs_telecommand(uint8_t * command, uint8_t length);
 
-ADCS_returnState advance_log_pointer();
 
-ADCS_returnState reset_boot_registers();
+ADCS_returnState ADCS_reset();
 
-ADCS_returnState format_sd_card();
+ADCS_returnState ADCS_reset_log_pointer();
 
-ADCS_returnState erase_file(File_Type file_type, uint8_t file_counter, bool erase_all);
+ADCS_returnState ADCS_advance_log_pointer();
 
-#endif /* ADCS_COMMANDS_H */
+ADCS_returnState ADCS_reset_boot_registers();
+
+ADCS_returnState ADCS_format_sd_card();
+
+ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter, bool erase_all);
+
+#endif /* ADCS_HANDLER_H */
