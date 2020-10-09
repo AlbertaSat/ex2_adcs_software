@@ -22,12 +22,28 @@
 #include <adcs_io.h>
 
 
+/**
+ * @brief
+ * 		
+ * @details
+ * 		<more detailed description of the function>
+ * @return
+ * 		<if applicable, brief description of what is returned by the function>
+ */
 ADCS_returnState adcs_telecommand(uint8_t * command, uint8_t length) {
   //send and receive data via selected data protocol (i2c, SPI, UART)
 
   return ADCS_ok;
 }
 
+/**
+ * @brief
+ * 		Perform a reset.
+ * @details
+ * 		<more detailed description of the function>
+ * @return
+ * 		<if applicable, brief description of what is returned by the function>
+ */
 ADCS_returnState ADCS_reset() {
   uint8_t command[2];
   command[0] = RESET_ID;
@@ -35,21 +51,52 @@ ADCS_returnState ADCS_reset() {
   return adcs_telecommand(&command, 2);
 }
 
+/**
+ * @brief
+ * 		Reset pointer to log buffer (from where LastLogEvent TLM is returned)
+ * @details
+ * 		<more detailed description of the function>
+ * 		<if applicable, brief description of what is returned by the function>
+ */
 ADCS_returnState ADCS_reset_log_pointer() {
   uint8_t command = RESET_LOG_POINTER_ID;
   return adcs_telecommand(&command, 1);
 }
 
+/**
+ * @brief
+ * 		Advance pointer to log buffer (from where LastLogEvent TLM is returned)
+ * @details
+ * 		<more detailed description of the function>
+ * @return
+ * 		<if applicable, brief description of what is returned by the function>
+ */
 ADCS_returnState ADCS_advance_log_pointer() {
   uint8_t command = ADVANCE_LOG_POINTER_ID;
   return adcs_telecommand(&command, 1);
 }
 
+/**
+ * @brief
+ * 		Reset Boot Registers
+ * @details
+ * 		<more detailed description of the function>
+ * @return
+ * 		<if applicable, brief description of what is returned by the function>
+ */
 ADCS_returnState ADCS_reset_boot_registers() {
   uint8_t command = RESET_BOOT_REGISTERS_ID;
   return adcs_telecommand(&command, 1);
 }
 
+/**
+ * @brief
+ * 		Format SD Card
+ * @details
+ * 		<more detailed description of the function>
+ * @return
+ * 		<if applicable, brief description of what is returned by the function>
+ */
 ADCS_returnState ADCS_format_sd_card() {
   uint8_t command[2];
   command[0] = FORMAT_SD_CARD_ID;
@@ -57,6 +104,21 @@ ADCS_returnState ADCS_format_sd_card() {
   return adcs_telecommand(&command, 2);
 }
 
+/**
+ * @brief
+ * 		Erase file
+ * @details
+ * 		<more detailed description of the function>
+ * @param file_type
+ * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG, FILE_TYPE_JPG_IMAGE, 
+ *                          FILE_TYPE_BMP_IMAGE or FILE_TYPE_INDEX.
+ * @param file_counter
+ * 		<if applicable, brief (one line) description of one of the function's arguments>
+ * @param erase_all
+ * 		<if applicable, brief (one line) description of one of the function's arguments>
+ * @return
+ * 		<if applicable, brief description of what is returned by the function>
+ */
 ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter, uint8_t erase_all) {
   uint8_t command[4];
   command[0] = ERASE_FILE_ID;
