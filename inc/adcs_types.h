@@ -15,13 +15,21 @@
 #ifndef ADCS_TYPES_H
 #define ADCS_TYPES_H
 
-const char Telemetery_Request = 1, Telecommand = 0, TC_TR_Mask = 0x80;
+#define ADCS_Telemetery_Request  1; 
+#define ADCS_Telecommand  0;
+#define ADCS_TC_TR_Mask  0x80;
 
-const char MAGIC_NUMBER = 0x5A;
+#define ADCS_MAGIC_NUMBER  0x5A;
+#define ADCS_ESC_CHAR      0x1F;
+#define ADCS_SOM           0x7F;
+#define ADCS_EOM           0xFF;
 
 typedef enum ADCS_returnState {
-  ADCS_ok,
-  ADCS_send_failed
+  ADCS_OK                 = 0,
+  ADCS_INVALID_ID         = 1,
+  ADCS_INCORRECT_LENGTH   = 2,
+  ADCS_INVALID_PARAMETERS = 3,
+  ADCS_CRC_ERROR          = 4
 } ADCS_returnState;
 
 typedef enum File_Type {

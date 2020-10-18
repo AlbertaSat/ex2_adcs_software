@@ -16,20 +16,22 @@
 #define ADCS_HANDLER_H
 
 #include <stdint.h>
+#include "adcs_types.h"
 
+//send_telecommand
 ADCS_returnState adcs_telecommand(uint8_t * command, uint8_t length);
 
 
+//Common Telecommands
 ADCS_returnState ADCS_reset();
-
 ADCS_returnState ADCS_reset_log_pointer();
-
 ADCS_returnState ADCS_advance_log_pointer();
-
 ADCS_returnState ADCS_reset_boot_registers();
-
 ADCS_returnState ADCS_format_sd_card();
+ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter, uint8_t erase_all);
 
-ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter, bool erase_all);
+
+//Common Telemetry
+
 
 #endif /* ADCS_HANDLER_H */

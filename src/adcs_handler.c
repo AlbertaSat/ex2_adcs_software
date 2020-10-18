@@ -17,9 +17,11 @@
  * @date 2020-08-09
  */
 
-#include <adcs_handler.h>
-#include <adcs_types.h>
-#include <adcs_io.h>
+#include "adcs_handler.h"
+#include "adcs_io.h"
+
+#define USE_UART
+//#define USE_I2C
 
 
 /**
@@ -33,7 +35,44 @@
 ADCS_returnState adcs_telecommand(uint8_t * command, uint8_t length) {
   //send and receive data via selected data protocol (i2c, SPI, UART)
 
-  return ADCS_ok;
+  // //Send SOM bytes 
+  // uart_send(1, &ESC_CHAR);
+  // uart_send(1, &SOM);
+
+  // //Send Command
+  // uart_send(length, command);
+
+  // //Send EOM
+  // uart_send(1, &ESC_CHAR);
+  // uart_send(1, &EOM);
+
+  //get Acknowledgement 
+  ADCS_returnState ack = ADCS_OK;
+
+  #ifdef USE_UART
+    /*
+     *--------------------MOCK-------------------------------------
+     */
+    
+    /*
+     *-------------------------------------------------------------
+     */
+    ack = send_uart_telecommand(command, length);
+
+  #elif USE_I2C
+
+    /*
+     *--------------------MOCK-------------------------------------
+     */
+    adcs_i2c_telecommand_ExpectAnyArgsAndReturn(ADCS_OK);
+    /*
+     *-------------------------------------------------------------
+     */
+    ack = send_i2c_telecommand(command, length);
+
+  #endif
+
+  return ack;
 }
 
 /**
@@ -47,8 +86,8 @@ ADCS_returnState adcs_telecommand(uint8_t * command, uint8_t length) {
 ADCS_returnState ADCS_reset() {
   uint8_t command[2];
   command[0] = RESET_ID;
-  command[1] = MAGIC_NUMBER; // Magic number
-  return adcs_telecommand(&command, 2);
+  command[1] = ADCS_MAGIC_NUMBER; // Magic number
+  return adcs_telecommand(command, 2);
 }
 
 /**
@@ -100,8 +139,8 @@ ADCS_returnState ADCS_reset_boot_registers() {
 ADCS_returnState ADCS_format_sd_card() {
   uint8_t command[2];
   command[0] = FORMAT_SD_CARD_ID;
-  command[1] = MAGIC_NUMBER; // magic number
-  return adcs_telecommand(&command, 2);
+  command[1] = ADCS_MAGIC_NUMBER; // magic number
+  return adcs_telecommand(command, 2);
 }
 
 /**
@@ -125,5 +164,5 @@ ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter, uint
   command[1] = file_type;
   command[2] = file_counter;
   command[3] = erase_all;
-  return adcs_telecommand(&command, 4);
+  return adcs_telecommand(command, 4);
 }

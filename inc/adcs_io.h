@@ -16,6 +16,7 @@
 #define ADCS_IO_H
 
 #include "adcs_types.h"
+#include <stdint.h>
 
 //ADCS_returnState adcs_telecommand(uint8_t * command, uint32_t length);
 
