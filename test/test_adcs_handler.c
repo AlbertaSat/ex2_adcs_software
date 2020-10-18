@@ -126,6 +126,8 @@ void test_ADCS_common_commands(void)
     TEST_ASSERT_EQUAL_INT(ADCS_OK, ADCS_initiate_download_burst(msg_l, ign_hole));
     //ADCS_invalid_TC_ID
     
+    free(command);
+    command = NULL;
 }
 
 void test_ADCS_common_telemetry(void)
