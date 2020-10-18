@@ -39,6 +39,25 @@ typedef enum File_Type {
   FILE_TYPE_INDEX             = 15
 } File_Type;
 
+typedef enum File_Upload_Dest {
+  EEPROM                 = 2,
+  FLASH_PROGRAM_1        = 3,
+  FLASH_PROGRAM_2        = 4,
+  FLASH_PROGRAM_3        = 5,
+  FLASH_PROGRAM_4        = 6,
+  FLASH_PROGRAM_5        = 7,
+  FLASH_PROGRAM_6        = 8,
+  FLASH_PROGRAM_7        = 9,
+  SD_USER_FILE_1         = 10,
+  SD_USER_FILE_2         = 11,
+  SD_USER_FILE_3         = 12,
+  SD_USER_FILE_4         = 13,
+  SD_USER_FILE_5         = 14,
+  SD_USER_FILE_6         = 15,
+  SD_USER_FILE_7         = 16,
+  SD_USER_FILE_8         = 17
+} File_Upload_Dest;
+
 typedef enum Common_Telecommand_IDs {
   RESET_ID                           = 1,    // perform a reset
   RESET_LOG_POINTER_ID               = 4,    // reset pointer to log buffer

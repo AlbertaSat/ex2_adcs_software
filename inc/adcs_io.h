@@ -21,12 +21,12 @@
 //ADCS_returnState adcs_telecommand(uint8_t * command, uint32_t length);
 
 //sends telecommand over uart/i2c, and return acknowledgment 
-ADCS_returnState send_uart_telecommand(uint8_t * command, uint32_t length);
-ADCS_returnState send_i2c_telecommand(uint8_t * command, uint32_t length);
+ADCS_returnState send_uart_telecommand(uint32_t * command, uint32_t length);
+ADCS_returnState send_i2c_telecommand(uint32_t * command, uint32_t length);
 
 //request telemetry over uart/i2c, and return acknowledgment
-ADCS_returnState request_uart_telecommand(uint8_t * command, uint32_t length);
-ADCS_returnState request_i2c_telecommand(uint8_t * command, uint32_t length);
+ADCS_returnState request_uart_telecommand(uint32_t * command, uint32_t length);
+ADCS_returnState request_i2c_telecommand(uint32_t * command, uint32_t length);
 
 // void uart_send(uint32_t length, uint8_t * data);
 // void uart_receive(uint32_t length, uint8_t * data);
