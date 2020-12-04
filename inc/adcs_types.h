@@ -75,4 +75,18 @@ typedef enum Common_Telecommand_IDs {
   INITIATE_DOWNLOAD_BURST_ID         = 119
 } Common_Telecommand_IDs;
 
+typedef enum BootLoader_Telecommand_IDs {
+	CLEAR_ERR_FLAGS_ID 				= 7,
+	SET_BOOT_INDEX_ID 				= 100,
+	RUN_SELECTED_PROGRAM_ID,
+	READ_PROGRAM_INFO_ID,
+	COPY_PROGRAM_INTERNAL_FLASH_ID
+} BootLoader_Telecommand_IDs;
+
+typedef enum BootLoader_Telemetry_IDs {
+	GET_BOOTLOADER_STATE_ID 				= 132,
+	GET_PROGRAM_INFO_ID						= 232,
+	COPY_INTERNAL_FLASH_PROGRESS_ID			= 233
+} BootLoader_Telemetry_IDs;
+
 #endif /* ADCS_TYPES_H */

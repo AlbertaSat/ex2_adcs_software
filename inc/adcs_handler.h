@@ -20,7 +20,8 @@
 #include "adcs_types.h"
 
 //send_telecommand
-ADCS_returnState adcs_telecommand(uint32_t * command, uint32_t length);
+ADCS_returnState adcs_telecommand(uint8_t * command, uint32_t length);
+ADCS_returnState adcs_telemetry(uint8_t TM_ID, uint8_t * reply, uint32_t length);
 
 
 //Common Telecommands
@@ -41,6 +42,19 @@ ADCS_returnState ADCS_initiate_download_burst(uint8_t msg_length, bool ignore_ho
 
 
 //Common Telemetry
+
+//BootLoader Telecommands
+ADCS_returnState ADCS_clear_err_flags (void);
+ADCS_returnState ADCS_set_boot_index (uint8_t index);
+ADCS_returnState ADCS_run_selected_program (void);
+ADCS_returnState ADCS_read_program_info (uint8_t index);
+ADCS_returnState ADCS_copy_program_internal_flash (uint8_t index, uint8_t overwrite_flag);
+
+//BootLoader Telemetries
+ADCS_returnState ADCS_get_bootloader_state (uint16_t * uptime, uint8_t * flags_arr);
+ADCS_returnState ADCS_get_program_info (uint8_t * index, bool * busy, uint32_t * file_size,
+		uint16_t * crc16_checksum);
+ADCS_returnState ADCS_copy_internal_flash_progress (bool * busy, bool * err);
 
 
 #endif /* ADCS_HANDLER_H */
