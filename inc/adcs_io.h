@@ -15,21 +15,22 @@
 #ifndef ADCS_IO_H
 #define ADCS_IO_H
 
-#include "adcs_types.h"
 #include <stdint.h>
 
-//ADCS_returnState adcs_telecommand(uint8_t * command, uint32_t length);
+#include "adcs_types.h"
 
-//sends telecommand over uart/i2c, and return acknowledgment 
-ADCS_returnState send_uart_telecommand(uint8_t * command, uint32_t length);
-ADCS_returnState send_i2c_telecommand(uint8_t * command, uint32_t length);
+// ADCS_returnState adcs_telecommand(uint8_t * command, uint32_t length);
 
-//request telemetry over uart/i2c, and return acknowledgment
-ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t * telemetry, uint32_t length);
-ADCS_returnState request_i2c_telemetry(uint8_t * command, uint32_t length);
+// sends telecommand over uart/i2c, and return acknowledgment
+ADCS_returnState send_uart_telecommand(uint8_t* command, uint32_t length);
+ADCS_returnState send_i2c_telecommand(uint8_t* command, uint32_t length);
 
-//void uart_send(uint8_t * data);
-//void uart_receive(uint8_t * data);
+// request telemetry over uart/i2c, and return acknowledgment
+ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t* telemetry,
+                                        uint32_t length);
+ADCS_returnState request_i2c_telemetry(uint8_t* command, uint32_t length);
 
+// void uart_send(uint8_t * data);
+// void uart_receive(uint8_t * data);
 
 #endif /* ADCS_IO_H */

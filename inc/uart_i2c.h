@@ -15,7 +15,7 @@
 #ifndef UART_I2C_H
 #define UART_I2C_H
 
-void uart_send(uint8_t * data, uint32_t length);
-void uart_receive(uint8_t * data, uint32_t length);
+void uart_send(uint8_t* data, uint32_t length);
+void uart_receive(uint8_t* data, uint32_t length);
 
 #endif
