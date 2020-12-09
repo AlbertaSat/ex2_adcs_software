@@ -248,3 +248,32 @@ void test_ADCS_BootLoader_telemetries(void) {
   TEST_ASSERT_EQUAL_UINT32(file_size, file_size_f);
   TEST_ASSERT_EQUAL_UINT16(crc16_checksum, crc16_checksum_f);
 }
+
+void test_ADCS_ACP_telecommands(void) {
+  // Same for all uart TC replies
+  uint8_t reply[6];
+  reply[0] = ADCS_ESC_CHAR;
+  reply[1] = ADCS_SOM;
+  reply[2] = CLEAR_LATCHED_ERRS_ID;
+  reply[3] = ADCS_OK;
+  reply[4] = ADCS_ESC_CHAR;
+  reply[5] = ADCS_EOM;
+
+  // Clear latched errors
+  uart_send_Ignore();
+  uart_receive_ExpectAnyArgs();
+  uart_receive_ReturnArrayThruPtr_data(reply, 6);
+  TEST_ASSERT_EQUAL_INT(ADCS_OK, ADCS_clear_latched_errs(1, 1));
+
+  // Set attitude control
+  uart_send_Ignore();
+  uart_receive_ExpectAnyArgs();
+  uart_receive_ReturnArrayThruPtr_data(reply, 6);
+  TEST_ASSERT_EQUAL_INT(ADCS_OK, ADCS_set_attitude_ctrl_mode(14, 6589));
+
+  // set magnetorquer output
+  uart_send_Ignore();
+  uart_receive_ExpectAnyArgs();
+  uart_receive_ReturnArrayThruPtr_data(reply, 10);
+  TEST_ASSERT_EQUAL_INT(ADCS_OK, ADCS_set_magnetorquer_output(630, 786, 912));
+}

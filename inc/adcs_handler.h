@@ -67,4 +67,24 @@ ADCS_returnState ADCS_get_program_info(uint8_t *index, bool *busy,
                                        uint16_t *crc16_checksum);
 ADCS_returnState ADCS_copy_internal_flash_progress(bool *busy, bool *err);
 
+// ACP Telecommands
+ADCS_returnState ADCS_deploy_magnetometer_boom(uint8_t actuation_timeout);
+ADCS_returnState ADCS_set_enabled_state(uint8_t state);
+ADCS_returnState ADCS_clear_latched_errs(bool adcs_flag, bool hk_flag);
+ADCS_returnState ADCS_set_attitude_ctrl_mode(uint8_t ctrl_mode,
+                                             uint16_t timeout);
+ADCS_returnState ADCS_set_attitude_estimate_mode(uint8_t mode);
+ADCS_returnState ADCS_trigger_adcs_loop(void);
+ADCS_returnState ADCS_trigger_adcs_loop_sim(uint8_t *sim_data);
+ADCS_returnState ADCS_set_ASGP4_rune_mode(uint8_t mode);
+ADCS_returnState ADCS_trigger_ASGP4(void);
+ADCS_returnState ADCS_set_MTM_op_mode(uint8_t mode);
+ADCS_returnState ADCS_cnv2jpg(uint8_t source, uint8_t QF,
+                              uint8_t white_balance);
+ADCS_returnState ADCS_save_img(uint8_t camera, uint8_t img_size);
+ADCS_returnState ADCS_set_magnetorquer_output(int16_t x, int16_t y, int16_t z);
+ADCS_returnState ADCS_set_wheel_speed(int16_t x, int16_t y, int16_t z);
+ADCS_returnState ADCS_save_config(void);
+ADCS_returnState ADCS_save_orbit_params(void);
+
 #endif /* ADCS_HANDLER_H */

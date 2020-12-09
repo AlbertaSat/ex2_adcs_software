@@ -89,4 +89,29 @@ typedef enum BootLoader_Telemetry_IDs {
   COPY_INTERNAL_FLASH_PROGRESS_ID = 233
 } BootLoader_Telemetry_IDs;
 
+typedef enum ACP_Telecommand_IDs {
+  DEPLOY_MAGNETOMETER_BOOM_ID =
+      7,  //* The ID is the same is CLEAR_ERR_FLAGS! how could it be?
+  ADCS_RUN_MODE_ID = 10,
+  CLEAR_LATCHED_ERRS_ID = 12,
+  SET_ATT_CONTROL_MODE_ID = 13,  // attitude
+  SET_ATT_ESTIMATE_MODE_ID = 14,
+  TRIGGER_ADCS_LOOP_ID = 18,
+  TRIGGER_ADCS_LOOP_SIM_ID = 19,
+  ASGP4_RUN_MODE_ID = 31,
+  ASGP4_TRIGGER_ID = 32,
+  SET_MTM_OP_MODE_ID = 56,
+  CNV2JPG_ID = 57,
+  SAVE_IMG_ID = 80,
+  SET_MAGNETORQUER_OUTPUT_ID = 16,
+  SET_WHEEL_SPEED_ID = 17,
+  SAVE_CONFIG_ID = 63,
+  SAVE_ORBIT_PARAMS = 64,
+} ACP_Telecommand_IDs;
+
+typedef enum ACP_Telemetry_IDs {
+  CURRENT_ADCS_STATE_ID = 132,
+
+} ACP_Telemetry_IDs;
+
 #endif /* ADCS_TYPES_H */
