@@ -65,261 +65,236 @@ ADCS_returnState adcs_telemetry(uint8_t TM_ID, uint8_t* reply,
   return ack;
 }
 
-///**
-// * @brief
-// * 		Perform a reset.
-// * @details
-// * 		<more detailed description of the function>
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_reset() {
-//  uint32_t command[2];
-//  command[0] = RESET_ID;
-//  command[1] = ADCS_MAGIC_NUMBER; // Magic number
-//  return adcs_telecommand(command, 2);
-//}
-//
-///**
-// * @brief
-// * 		Reset pointer to log buffer (from where LastLogEvent TLM is
-// returned)
-// * @details
-// * 		<more detailed description of the function>
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_reset_log_pointer() {
-//  uint32_t command = RESET_LOG_POINTER_ID;
-//  return adcs_telecommand(&command, 1);
-//}
-//
-///**
-// * @brief
-// * 		Advance pointer to log buffer (from where LastLogEvent TLM is
-// returned)
-// * @details
-// * 		<more detailed description of the function>
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_advance_log_pointer() {
-//  uint32_t command = ADVANCE_LOG_POINTER_ID;
-//  return adcs_telecommand(&command, 1);
-//}
-//
-///**
-// * @brief
-// * 		Reset Boot Registers
-// * @details
-// * 		<more detailed description of the function>
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_reset_boot_registers() {
-//  uint32_t command = RESET_BOOT_REGISTERS_ID;
-//  return adcs_telecommand(&command, 1);
-//}
-//
-///**
-// * @brief
-// * 		Format SD Card
-// * @details
-// * 		<more detailed description of the function>
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_format_sd_card() {
-//  uint32_t command[2];
-//  command[0] = FORMAT_SD_CARD_ID;
-//  command[1] = ADCS_MAGIC_NUMBER; // magic number
-//  return adcs_telecommand(command, 2);
-//}
-//
-///**
-// * @brief
-// * 		Erase file
-// * @details
-// * 		<more detailed description of the function>
-// * @param file_type
-// * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG,
-// FILE_TYPE_JPG_IMAGE,
-// *                          FILE_TYPE_BMP_IMAGE or FILE_TYPE_INDEX.
-// * @param file_counter
-// * 		<if applicable, brief (one line) description of one of the
-// function's arguments>
-// * @param erase_all
-// * 		<if applicable, brief (one line) description of one of the
-// function's arguments>
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter,
-// bool erase_all) {
-//  uint32_t command[4];
-//  command[0] = ERASE_FILE_ID;
-//  command[1] = file_type;
-//  command[2] = file_counter;
-//  command[3] = erase_all;
-//  return adcs_telecommand(command, 4);
-//}
-//
-///**
-// * @brief
-// * 		Fill download with file contents
-// * @param file_type
-// * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG,
-// FILE_TYPE_JPG_IMAGE,
-// *                          FILE_TYPE_BMP_IMAGE or FILE_TYPE_INDEX.
-// * @param counter
-// * 		<if applicable, brief (one line) description of one of the
-// function's arguments>
-// * @param offset
-// * 		<if applicable, brief (one line) description of one of the
-// function's arguments>
-// * @param block_length
-// * 		<if applicable, brief (one line) description of one of the
-// function's arguments>
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_load_file_download_block(File_Type file_type, uint8_t
-// counter, uint32_t offset, uint16_t block_length){
-//  uint32_t command[5];
-//  command[0] = LOAD_FILE_DOWNLOAD_BLOCK_ID;
-//  command[1] = file_type;
-//  command[2] = counter;
-//  command[3] = offset;
-//  command[4] = block_length;
-//
-//  return adcs_telecommand(command, 5);
-//}
-//
-///**
-// * @brief
-// * 		Advance File List Read Pointer
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_advance_file_list_read_pointer(){
-//  uint32_t command = ADVANCE_FILE_LIST_READ_POINTER_ID;
-//  return adcs_telecommand(&command, 1);
-//}
-//
-///**
-// * @brief
-// * 		Initiate File Upload
-// * @param file_dest
-// * 		Accepted parameters: EEPROM, FLASH_PROGRAM_1 - FLASH_PROGRAM_7,
-// *                          SD_USER_FILE_1 - SD_USER_FILE_8
-// * @param block_size
-// *
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_initiate_file_upload(File_Upload_Dest file_dest,
-// uint8_t block_size){
-//  uint32_t command[3];
-//  command[0] = INITIATE_FILE_UPLOAD_ID;
-//  command[1] = file_dest;
-//  command[2] = block_size;
-//  adcs_telecommand(command, 3);
-//}
-//
-///**
-// * @brief
-// * 		File Upload Packet
-// * @param packet_number
-// * 		Packet Number
-// * @param file_bytes
-// * 		File Bytes
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_file_upload_packet(uint16_t packet_number, char
-// *file_bytes){
-//  uint32_t command[3];
-//  command[0] = FILE_UPLOAD_PACKET_ID;
-//  command[1] = packet_number;
-//  command[2] = file_bytes;
-//  adcs_telecommand(command, 3);
-//}
-//
-///**
-// * @brief
-// * 		Finalize Uploaded File Block
-// * @param file_dest
-// * 		File Destination
-// * @param offset
-// * 		Offset into file
-// * @param block_length
-// * 		Length of block
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_finalize_upload_block(File_Upload_Dest file_dest,
-// uint32_t offset, uint16_t block_length){
-//  uint32_t command[4];
-//  command[0] = FINALIZE_UPLOAD_BLOCK_ID;
-//  command[1] = file_dest;
-//  command[2] = offset;
-//  command[3] = block_length;
-//  adcs_telecommand(command, 4);
-//}
-//
-///**
-// * @brief
-// * 		Reset HoleMap for Upload Block
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_reset_upload_block(){
-//  uint32_t command = RESET_UPLOAD_BLOCK_ID;
-//  return adcs_telecommand(&command, 1);
-//}
-//
-///**
-// * @brief
-// * 		Reset File List Read Pointer
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_reset_file_list_read_pointer(){
-//  uint32_t command = RESET_FILE_LIST_READ_POINTER_ID;
-//  return adcs_telecommand(&command, 1);
-//}
-//
-///**
-// * @brief
-// * 		Initiate Download Burst
-// * @param msg_length
-// * 		Message Length
-// * @param ignore_hole_map
-// * 		Ignore Hole Map
-// * @return
-// * 		<if applicable, brief description of what is returned by the
-// function>
-// */
-// ADCS_returnState ADCS_initiate_download_burst(uint8_t msg_length, bool
-// ignore_hole_map){
-//  uint32_t command[3];
-//  command[0] = INITIATE_DOWNLOAD_BURST_ID;
-//  command[1] = msg_length;
-//  command[2] = ignore_hole_map;
-//  adcs_telecommand(command, 3);
-//}
+/**
+ * @brief
+ * 		Perform a reset.
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_reset(void) {
+  uint8_t command[2];
+  command[0] = RESET_ID;
+  command[1] = ADCS_MAGIC_NUMBER;  // Magic number 0x5A
+  return adcs_telecommand(command, 2);
+}
+
+/**
+ * @brief
+ * 		Reset pointer to log buffer (from where LastLogEvent TLM is
+ returned)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_reset_log_pointer(void) {
+  uint8_t command = RESET_LOG_POINTER_ID;
+  return adcs_telecommand(&command, 1);
+}
+
+/**
+ * @brief
+ * 		Advance pointer to log buffer (from where LastLogEvent TLM is
+ returned)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_advance_log_pointer(void) {
+  uint8_t command = ADVANCE_LOG_POINTER_ID;
+  return adcs_telecommand(&command, 1);
+}
+
+/**
+ * @brief
+ * 		Reset Boot Registers
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_reset_boot_registers(void) {
+  uint8_t command = RESET_BOOT_REGISTERS_ID;
+  return adcs_telecommand(&command, 1);
+}
+
+/**
+ * @brief
+ * 		Format SD Card
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_format_sd_card(void) {
+  uint8_t command[2];
+  command[0] = FORMAT_SD_CARD_ID;
+  command[1] = ADCS_MAGIC_NUMBER;  // magic number 0x5A
+  return adcs_telecommand(command, 2);
+}
+
+/**
+ * @brief
+ * 		Erase file
+ * @param file_type 	//* Not sure if a new type is necessary
+ * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG = 2,
+ *	 	 	 	 	 	 	 FILE_TYPE_JPG_IMAGE =
+ *3, FILE_TYPE_BMP_IMAGE = 4, FILE_TYPE_INDEX = 15
+ * @param file_counter
+ * @param erase_all
+ * 		if erase all
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter,
+                                 bool erase_all) {
+  uint8_t command[4];
+  command[0] = ERASE_FILE_ID;
+  command[1] = file_type;
+  command[2] = file_counter;
+  command[3] = erase_all;
+  return adcs_telecommand(command, 4);
+}
+
+/**
+ * @brief
+ * 		Fill download with file contents
+ * @param file_type
+ * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG = 2,
+ *	 	 	 	 	 	 	 FILE_TYPE_JPG_IMAGE =
+ *3, FILE_TYPE_BMP_IMAGE = 4, FILE_TYPE_INDEX = 15
+ * @param counter
+ * @param offset
+ * @param block_length
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_load_file_download_block(File_Type file_type,
+                                               uint8_t counter, uint32_t offset,
+                                               uint16_t block_length) {
+  uint8_t command[9];
+  command[0] = LOAD_FILE_DOWNLOAD_BLOCK_ID;
+  command[1] = file_type;
+  command[2] = counter;
+  memcpy(&command[3], &offset, 4);
+  command[7] = block_length & 0xFF;
+  command[8] = block_length >> 8;
+
+  return adcs_telecommand(
+      command, 5);  //* tested + (command[6] * 256 * 256 * 256 + command[5] *
+                    // 256 * 256 + command[4] * 256 + command[3])
+}
+
+/**
+ * @brief
+ * 		Advance File List Read Pointer
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_advance_file_list_read_pointer(void) {
+  uint8_t command = ADVANCE_FILE_LIST_READ_POINTER_ID;
+  return adcs_telecommand(&command, 1);
+}
+
+/**
+ * @brief
+ * 		Initiate File Upload
+ * @param file_dest
+ * 		Accepted parameters: EEPROM = 2,
+ * 							 FLASH_PROGRAM_1 - FLASH_PROGRAM_7
+ * = 3-10, SD_USER_FILE_1 - SD_USER_FILE_8 = 11-17
+ * @param block_size
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_initiate_file_upload(File_Upload_Dest file_dest,
+                                           uint8_t block_size) {
+  uint8_t command[3];
+  command[0] = INITIATE_FILE_UPLOAD_ID;
+  command[1] = file_dest;
+  command[2] = block_size;
+  return adcs_telecommand(command, 3);
+}
+
+/**
+ * @brief
+ * 		File Upload Packet
+ * @param packet_number
+ * 		Packet Number
+ * @param file_bytes
+ * 		File Bytes
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_file_upload_packet(uint16_t packet_number,
+                                         char* file_bytes) {
+  uint8_t command[23];
+  command[0] = FILE_UPLOAD_PACKET_ID;
+  command[1] = packet_number & 0xFF;
+  command[2] = packet_number >> 8;
+  memcpy(&command[3], file_bytes, 22);
+  return adcs_telecommand(
+      command,
+      3);  //* Tested. returns ascii value of the string test: +command[6]
+}
+
+/**
+ * @brief
+ * 		Finalize Uploaded File Block
+ * @param file_dest
+ * 		File Destination
+ * @param offset
+ * 		Offset into file
+ * @param block_length
+ * 		Length of block
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_finalize_upload_block(File_Upload_Dest file_dest,
+                                            uint32_t offset,
+                                            uint16_t block_length) {
+  uint8_t command[8];
+  command[0] = FINALIZE_UPLOAD_BLOCK_ID;
+  command[1] = file_dest;
+  memcpy(&command[2], &offset, 4);
+  command[6] = block_length & 0xFF;
+  command[7] = block_length >> 8;
+  return adcs_telecommand(command, 8);
+}
+
+/**
+ * @brief
+ * 		Reset HoleMap for Upload Block
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_reset_upload_block(void) {
+  uint8_t command = RESET_UPLOAD_BLOCK_ID;
+  return adcs_telecommand(&command, 1);
+}
+
+/**
+ * @brief
+ * 		Reset File List Read Pointer
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_reset_file_list_read_pointer(void) {
+  uint8_t command = RESET_FILE_LIST_READ_POINTER_ID;
+  return adcs_telecommand(&command, 1);
+}
+
+/**
+ * @brief
+ * 		Initiate Download Burst
+ * @param msg_length
+ * 		Message Length
+ * @param ignore_hole_map
+ * 		Ignore Hole Map
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_initiate_download_burst(uint8_t msg_length,
+                                              bool ignore_hole_map) {
+  uint8_t command[3];
+  command[0] = INITIATE_DOWNLOAD_BURST_ID;
+  command[1] = msg_length;
+  command[2] = ignore_hole_map;
+  return adcs_telecommand(command, 3);
+}
 
 /*************************** BootLoader TCs ***************************/
 /**
@@ -391,9 +366,10 @@ ADCS_returnState ADCS_read_program_info(uint8_t index) {
  * @brief
  * 		Copy program to internal flash
  * @param index
- * 		Table 66 - Source Program index				//* not
- * good for services 0 : BootLoader, 1 : Internal flash program, 2 : EEPROM,
+ * 		Table 66 - Source Program index
+ * 		0 : BootLoader, 1 : Internal flash program, 2 : EEPROM,
  * 3-9: External flash program 1-7, 10-17: SD user file 1-8
+ * //* not good for services
  * @attention
  * 		flag = 0x5A overwrites the boot segment
  * @return
@@ -407,7 +383,6 @@ ADCS_returnState ADCS_copy_program_internal_flash(uint8_t index,
     return ADCS_INVALID_PARAMETERS;
   } else {
     command[1] = index;
-    //* In QB50 it's unused. Would we want to overwrite boot segment?
     command[2] = overwrite_flag;
     return adcs_telecommand(command, 3);
   }
@@ -462,7 +437,7 @@ ADCS_returnState ADCS_get_program_info(uint8_t* index, bool* busy,
   ADCS_returnState state;
   state = adcs_telemetry(GET_PROGRAM_INFO_ID, telemetry, 8);
   *index = telemetry[0];
-  *busy = telemetry[1] & 1;  //*
+  *busy = telemetry[1] & 1;
   *file_size = (telemetry[5] << 24) + (telemetry[4] << 16) +
                (telemetry[3] << 8) + telemetry[2];
   *crc16_checksum = (telemetry[7] << 8) + telemetry[6];
@@ -577,8 +552,8 @@ ADCS_returnState ADCS_set_attitude_estimate_mode(uint8_t mode) {
  * @brief
  * 		Trigger ADCS loop
  * 	@attention
- * 		ADCS_set_enabled_state(2) must have been called in order for this
- * to operate
+ * 		ADCS_set_enabled_state(2) must have been called in order for
+ * this to operate
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -593,14 +568,14 @@ ADCS_returnState ADCS_trigger_adcs_loop(void) {
  * 	@parameter sim_data
  * 		127 bytes of data. Refer to table 84
  * 	@attention
- * 		ADCS_set_enabled_state(2) must have been called in order for this
- * to operate
+ * 		ADCS_set_enabled_state(2) must have been called in order for
+ * this to operate
  * @return
  * 		Success of function defined in adcs_types.h
  */
 ADCS_returnState ADCS_trigger_adcs_loop_sim(
     uint8_t* sim_data) {  //* Doesn't make sense to implement by individual
-                          //parameters.
+                          // parameters.
   uint8_t command[128];
   command[0] = TRIGGER_ADCS_LOOP_SIM_ID;
   memcpy(&command[1], sim_data, 127);
@@ -707,8 +682,8 @@ ADCS_returnState ADCS_save_img(uint8_t camera, uint8_t img_size) {
  * 		ADCS_set_attitude_ctrl_mode(0, ) must be called. (Control mode
  * None)
  * @attention
- * 		If using the raw value, perform /1000 and note that the value must
- * be <2^15
+ * 		If using the raw value, perform /1000 and note that the value
+ * must be <2^15
  * @param x,y,z
  * 		Commanded x,y,z-torquer duty cycle
  * @return
