@@ -110,8 +110,28 @@ typedef enum ACP_Telecommand_IDs {
 } ACP_Telecommand_IDs;
 
 typedef enum ACP_Telemetry_IDs {
-  CURRENT_ADCS_STATE_ID = 132,
-
+  // ADCS state
+  ADCS_STATE = 190,  //* Includes 132, 146:150, 201, 218-219, 224
+  // General
+  JPG_CNV_PROGRESS_ID = 133,
+  CUBEACP_STATE_FLAGS_ID = 135,
+  ADCS_EXE_TIMES_ID = 196,
+  ACP_EXE_STATE_ID = 220,
+  IMG_CAPTURE_SAVE_OP_STAT = 233,
+  // ADCS measurements
+  ADCS_MEASUREMENTS_ID = 191,  //* Includes 151:156, 181:186
+  // Actuator
+  ACTUATOR_ID = 192,  //* Includes 157,158
+  // Estimation
+  ESTIMATION_ID = 193,  //* Includes 159:165
+  ASGP4_TLEs_ID = 228,
+  // Raw sensor
+  RAW_SENSOR_MEASUREMENTS_ID = 194,  //* Includes 166:170, 216
+  RAW_GPS_MEASUREMENTS_ID = 210,     //* Includes 176:180
+  RAW_STAR_TRACKER_ID = 211,         //* Includes 187:189, 212:214, 229:231
+  MTM2_MEASUREMENTS_ID = 215,
+  // Power
+  POWER_TEMP_ID = 195,  //* Includes 171:175, 198, 232
 } ACP_Telemetry_IDs;
 
 #endif /* ADCS_TYPES_H */
