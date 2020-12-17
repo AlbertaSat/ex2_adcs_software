@@ -217,8 +217,7 @@ ADCS_returnState ADCS_format_sd_card(void) {
  * 		Erase file
  * @param file_type 	//* Not sure if a new type is necessary
  * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG = 2,
- *	 	 	 	 	 	 	 FILE_TYPE_JPG_IMAGE =
- *3, FILE_TYPE_BMP_IMAGE = 4, FILE_TYPE_INDEX = 15
+ * FILE_TYPE_JPG_IMAGE = 3, FILE_TYPE_BMP_IMAGE = 4, FILE_TYPE_INDEX = 15
  * @param file_counter
  * @param erase_all
  * 		if erase all
@@ -240,8 +239,7 @@ ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter,
  * 		Fill download with file contents
  * @param file_type
  * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG = 2,
- *	 	 	 	 	 	 	 FILE_TYPE_JPG_IMAGE =
- *3, FILE_TYPE_BMP_IMAGE = 4, FILE_TYPE_INDEX = 15
+ * FILE_TYPE_JPG_IMAGE = 3, FILE_TYPE_BMP_IMAGE = 4, FILE_TYPE_INDEX = 15
  * @param counter
  * @param offset
  * @param block_length
@@ -279,8 +277,7 @@ ADCS_returnState ADCS_advance_file_list_read_pointer(void) {
  * @brief
  * 		Initiate File Upload
  * @param file_dest
- * 		Accepted parameters: EEPROM = 2,
- * 							 FLASH_PROGRAM_1 -
+ * 		Accepted parameters: EEPROM = 2, FLASH_PROGRAM_1 -
  * FLASH_PROGRAM_7 = 3-10, SD_USER_FILE_1 - SD_USER_FILE_8 = 11-17
  * @param block_size
  * @return
@@ -942,10 +939,10 @@ ADCS_returnState ADCS_get_cubeACP_state(uint8_t* flags_arr) {
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_get_execution_times(uint8_t* adcs_update,
-                                          uint8_t* sensor_comms,
-                                          uint8_t* sgp4_propag,
-                                          uint8_t* igrf_model) {
+ADCS_returnState ADCS_get_execution_times(uint16_t* adcs_update,
+                                          uint16_t* sensor_comms,
+                                          uint16_t* sgp4_propag,
+                                          uint16_t* igrf_model) {
   uint8_t telemetry[8];
   ADCS_returnState state;
   state = adcs_telemetry(ADCS_EXE_TIMES_ID, telemetry, 8);
@@ -1354,3 +1351,260 @@ ADCS_returnState ADCS_get_power_temp(adcs_pwr_temp* measurements) {
 }
 
 /************************* ACP Config Msgs *************************/
+/***************************** General *****************************/
+/**
+ * @brief
+ * 		Control the power state of some components (Table 184)
+ * @param control
+ * 		an array with the values defined in Table 185:
+ * 		0 : off
+ * 		1 : on
+ * 		2 : keep the same
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_power_control(uint8_t* control) {
+  uint8_t command[4];
+  command[0] = SET_POWER_CONTROL_ID;
+  for (int i = 0; i < 4; i++) {
+    command[1] = command[1] | (*(control + i) << 2 * i);
+  }
+  for (int i = 0; i < 4; i++) {
+    command[2] = command[2] | (*(control + 4 + i) << 2 * i);
+  }
+  for (int i = 0; i < 2; i++) {
+    command[3] = command[3] | (*(control + i) << 2 * i);
+  }
+  return adcs_telecommand(command, 4);
+}
+
+/**
+ * @brief
+ * 		Get the power state of some components (Table 184)
+ * @param control
+ * 		an array with the values defined in Table 185:
+ * 		0 : off
+ * 		1 : on
+ * 		2 : keep the same
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_power_control(uint8_t* control) {
+  uint8_t telemetry[3];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_POWER_CONTROL_ID, telemetry, 3);
+
+  for (int i = 0; i < 4; i++) {
+    *(control + i) = (telemetry[0] >> 2 * i) & 0x3;
+  }
+  for (int i = 0; i < 4; i++) {
+    *(control + i + 4) = (telemetry[1] >> 2 * i) & 0x3;
+  }
+  for (int i = 0; i < 2; i++) {
+    *(control + i) = (telemetry[2] >> 2 * i) & 0x3;
+  }
+  return state;
+}
+
+/**
+ * @brief
+ * 		Set commanded attitude angles (Table 186)
+ * @param att_angle
+ * 		roll, pitch, yaw angle
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_attitude_angle(xyz att_angle) {
+  uint8_t command[7];
+  command[0] = SET_ATT_ANGLE_ID;
+  float coef = 0.01;
+  xyz16 raw_val;
+  raw_val.x = att_angle.x / coef;
+  raw_val.y = att_angle.y / coef;
+  raw_val.z = att_angle.z / coef;
+  memcpy(&command[1], &raw_val, 6);
+  return adcs_telecommand(command, 7);
+}
+
+/**
+ * @brief
+ * 		Get commanded attitude angles (Table 186)
+ * @param att_angle
+ * 		roll, pitch, yaw angle
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_attitude_angle(xyz* att_angle) {
+  uint8_t telemetry[6];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_ATT_ANGLE_ID, telemetry, 6);
+  float coef = 0.01;
+  get_xyz(att_angle, &telemetry[0], coef);
+  return state;
+}
+
+/**
+ * @brief
+ * 		Set target reference for tracking control mode (Table 187)
+ * @param att_angle
+ * 		longitude, latitude, angle
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_track_controller(xyz target) {
+  uint8_t command[13];
+  command[0] = SET_TRACK_CTRLER_TARGET_REF_ID;
+  memcpy(&command[1], &target, 6);
+  return adcs_telecommand(command, 13);
+}
+
+/**
+ * @brief
+ * 		Get target reference for tracking control mode (Table 187)
+ * @param att_angle
+ * 		longitude, latitude, angle
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_track_controller(xyz* target) {
+  uint8_t telemetry[12];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_TRACK_CTRLER_TARGET_REF_ID, telemetry, 12);
+  memcpy(&target->x, &telemetry[0], 4);
+  memcpy(&target->y, &telemetry[4], 4);
+  memcpy(&target->z, &telemetry[8], 4);
+  return state;
+}
+
+/**
+ * @brief
+ * 		Log selection and period for LOG 1,2
+ * @param flags_arr
+ * 		Up to 80 flags indicating which telemetry frames should be
+ * logged
+ * @param period
+ * 		log period (0 for stop)
+ * @param dest
+ * 		log destination (Table 211)
+ * 		0 : primary SD card
+ * 		1 : secondary SD card
+ * @param log
+ * 		1 : log1
+ * 		2 : log2
+ * 		3 : UART
+ * @attention
+ * 		dest for UART is not needed.
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_log_config(uint8_t* flags_arr, uint16_t period,
+                                     uint8_t dest, uint8_t log) {
+  uint8_t command[14];
+  command[0] = SET_SD_LOG1_CONFIG_ID + (log - 1);
+  for (int j = 0; j < 10; j++) {
+    for (int i = 0; i < 8; i++) {
+      command[j + 1] = command[j + 1] | (*(flags_arr + (8 * j) + i) << i);
+    }
+  }
+  memcpy(&command[11], &period, 2);
+  command[13] = dest;
+  ADCS_returnState state;
+  if (log == 3) {
+    state = adcs_telecommand(command, 13);
+  } else {
+    state = adcs_telecommand(command, 14);
+  }
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get log selection and period for LOG 1,2
+ * @param flags_arr
+ * 		Up to 80 flags indicating which telemetry frames should be
+ * logged
+ * @param period
+ * 		log period (0 for stop)
+ * @param dest
+ * 		log destination (Table 211)
+ * 		0 : primary SD card
+ * 		1 : secondary SD card
+ * @param log
+ * 		1 : log1
+ * 		2 : log2
+ * 		3 : dest
+ * @attention
+ * 		dest for UART is not used.
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_log_config(uint8_t* flags_arr, uint16_t* period,
+                                     uint8_t* dest, uint8_t log) {
+  uint8_t telemetry[13];
+  ADCS_returnState state;
+  uint8_t TM_ID = GET_SD_LOG1_CONFIG_ID + (log - 1);
+  if (TM_ID == GET_UART_LOG_CONFIG_ID) {
+    state = adcs_telemetry(TM_ID, telemetry, 12);
+  } else {
+    state = adcs_telemetry(TM_ID, telemetry, 13);
+  }
+
+  for (int j = 0; j < 10; j++) {
+    for (int i = 0; i < 8; i++) {
+      *(flags_arr + (8 * j) + i) = (telemetry[j] >> i) & 1;
+    }
+  }
+  *period = telemetry[11] << 8 | telemetry[10];
+  if (TM_ID == GET_UART_LOG_CONFIG_ID) {
+    *dest = 2;
+  } else {
+    *dest = telemetry[12];
+  }
+  return state;
+}
+
+/**
+ * @brief
+ * 		Set reference unit vector for inertial pointing control mode
+ * (Table 214)
+ * @param inter_ref
+ * 		Intertial reference
+ * @param coef
+ * 		formatted value = rawval * coef;
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_intertial_ref(xyz inter_ref) {
+  uint8_t command[7];
+  command[0] = SET_INTERTIAL_POINT_ID;
+  float coef = 0.0001;
+  xyz16 raw_val;
+  raw_val.x = inter_ref.x / coef;
+  raw_val.y = inter_ref.y / coef;
+  raw_val.z = inter_ref.z / coef;
+  memcpy(&command[1], &raw_val, 6);
+  return adcs_telecommand(command, 7);
+}
+
+/**
+ * @brief
+ * 		Get reference unit vector for inertial pointing control mode
+ * (Table 214)
+ * @param inter_ref
+ * 		Intertial reference
+ * @param coef
+ * 		formatted value = rawval * coef;
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_intertial_ref(xyz* inter_ref) {
+  uint8_t telemetry[6];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_INTERTIAL_POINT_ID, telemetry, 6);
+  float coef = 0.0001;
+  get_xyz(inter_ref, &telemetry[0], coef);
+  // get_xyz(&data->angular_rate_covar, &telemetry[36], 0.001);
+  return state;
+}
+
+/************************* Configuration *************************/
