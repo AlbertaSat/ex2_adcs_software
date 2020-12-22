@@ -66,6 +66,9 @@ ADCS_returnState adcs_telemetry(uint8_t TM_ID, uint8_t* reply,
   return ack;
 }
 
+// To Do: We should put these functions into a new file so we can use them in
+// test, too. A lot of bitwise operations in this file can be replaced with this
+// function (probably with a better name!).
 /**
  * @brief
  * 		append two bytes of a int16_t
@@ -128,7 +131,7 @@ uint16_t uint82uint16(uint8_t b1, uint8_t b2) {  //* improve
  * @param coef
  * 		formatted value = rawval * coef;
  */
-void get_xyz(xyz* measurement, uint8_t* address, float coef) {  //*check
+void get_xyz(xyz* measurement, uint8_t* address, float coef) {
   measurement->x = coef * uint82int16(*address, *(address + 1));
   measurement->y = coef * uint82int16(*(address + 2), *(address + 3));
   measurement->z = coef * uint82int16(*(address + 4), *(address + 5));
@@ -148,6 +151,25 @@ void get_xyz16(xyz16* measurement, uint8_t* address) {
   measurement->x = uint82int16(*address, *(address + 1));
   measurement->y = uint82int16(*(address + 2), *(address + 3));
   measurement->z = uint82int16(*(address + 4), *(address + 5));
+}
+
+/**
+ * @brief
+ * 		a supplementary function for adcs_get_full_config
+ * @detail
+ * 		Converts the correct value from telemetry bytes with the
+ * coefficient factor
+ * @param matrix
+ * 		a 3*3 matrix
+ * @param address
+ * 		the position in the telemetry frame where the data is located
+ * @param coef
+ * 		formatted value = rawval * coef;
+ */
+void get_3x3(float* matrix, uint8_t* address, float coef) {
+  for (int i = 0; i < 9; i++) {
+    matrix[i] = coef * uint82int16(*(address + 2 * i), *(address + 2 * i + 1));
+  }
 }
 
 /*************************** Commond TCs ***************************/
@@ -1125,8 +1147,8 @@ ADCS_returnState ADCS_get_ASGP4(bool* complete, uint8_t* err,
 void get_cam_sensor(cam_sensor* cam, uint8_t* address) {
   cam->centroid_x = uint82int16(*address, *(address + 1));
   cam->centroid_y = uint82int16(*(address + 2), *(address + 3));
-  cam->capture_stat = *(address + 4);   //* check
-  cam->detect_result = *(address + 5);  //* check
+  cam->capture_stat = *(address + 4);
+  cam->detect_result = *(address + 5);
 }
 
 /**
@@ -1145,7 +1167,7 @@ ADCS_returnState ADCS_get_raw_sensor(adcs_raw_sensor* measurements) {
   get_cam_sensor(&measurements->cam1, &telemetry[0]);
   get_cam_sensor(&measurements->cam2, &telemetry[6]);
   for (int i = 0; i < 10; i++) {
-    *(measurements->css + i) = telemetry[i + 12];  //* check
+    *(measurements->css + i) = telemetry[i + 12];
   }
   get_xyz16(&measurements->MTM, &telemetry[22]);
   get_xyz16(&measurements->rate, &telemetry[28]);
@@ -1163,7 +1185,7 @@ ADCS_returnState ADCS_get_raw_sensor(adcs_raw_sensor* measurements) {
  * 		the position in the telemetry frame where the data is located
  */
 void get_ecef(ecef* coordinate, uint8_t* address) {
-  coordinate->pos = uint82int32(address);  //* check
+  coordinate->pos = uint82int32(address);
   coordinate->vel = uint82int16(*(address + 4), *(address + 5));
 }
 
@@ -1198,8 +1220,6 @@ ADCS_returnState ADCS_get_raw_GPS(adcs_raw_gps* measurements) {
   measurements->vel_std_dev.x = telemetry[33];
   measurements->vel_std_dev.y = telemetry[34];
   measurements->vel_std_dev.z = telemetry[35];
-  // get_xyzu8(&measurements->vel_std_dev, &telemetry[33]); // maybe have it
-  // implicit
   return state;
 }
 
@@ -1293,7 +1313,7 @@ ADCS_returnState ADCS_get_MTM2_measurements(xyz16* Mag) {
  * @param coef
  * 		formatted value = rawval * coef;
  */
-void get_current(float* measurement, uint8_t* address, float coef) {  //*check
+void get_current(float* measurement, uint8_t* address, float coef) {
   *measurement = coef * uint82uint16(*address, *(address + 1));
 }
 
@@ -1608,3 +1628,601 @@ ADCS_returnState ADCS_get_intertial_ref(xyz* inter_ref) {
 }
 
 /************************* Configuration *************************/
+/**
+ * @brief
+ * 		Set SGP4 orbit parameter
+ * @param params
+ * 		Refer to table 194
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_sgp4_orbit_params(adcs_sgp4 params) {
+  uint8_t command[65];
+  command[0] = SET_SGP4_ORBIT_PARAMS_ID;
+  memcpy(&command[1], &params.inclination, 8);
+  memcpy(&command[9], &params.ECC, 8);
+  memcpy(&command[17], &params.RAAN, 8);
+  memcpy(&command[25], &params.AOP, 8);
+  memcpy(&command[33], &params.Bstar, 8);
+  memcpy(&command[41], &params.MM, 8);
+  memcpy(&command[49], &params.MA, 8);
+  memcpy(&command[57], &params.epoch, 8);
+  return adcs_telecommand(command, 65);
+}
+
+/**
+ * @brief
+ * 		Get SGP4 orbit parameter
+ * @param params
+ * 		Refer to table 194
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_sgp4_orbit_params(adcs_sgp4* params) {
+  uint8_t telemetry[64];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_SGP4_ORBIT_PARAMS_ID, telemetry, 64);
+  memcpy(&params->inclination, &telemetry[0], 8);
+  memcpy(&params->ECC, &telemetry[8], 8);
+  memcpy(&params->RAAN, &telemetry[16], 8);
+  memcpy(&params->AOP, &telemetry[24], 8);
+  memcpy(&params->Bstar, &telemetry[32], 8);
+  memcpy(&params->MM, &telemetry[40], 8);
+  memcpy(&params->MA, &telemetry[48], 8);
+  memcpy(&params->epoch, &telemetry[56], 8);
+  return state;
+}
+
+/**
+ * @brief
+ * 		Set current hard-coded system configuration
+ * @param config
+ * 		Refer to table 201
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_system_config(adcs_sysConfig config) {
+  uint8_t command[174];
+  command[0] = SET_SYSTEM_CONFIG_ID;
+  command[1] = (config.special_ctrl_sel << 4) | config.acp_type;
+  command[2] = config.CC_sig_ver;
+  command[3] = config.CC_motor_ver;
+  command[4] = config.CS1_ver;
+  command[5] = config.CS2_ver;
+  command[6] = (config.CS2_cam << 4) | config.CS1_cam;
+  command[7] = config.cubeStar_ver;
+  command[8] = (config.include_MTM2 << 4) | config.GPS;  //* check for bool
+  memcpy(&command[9], &config.MTQ_max_dipole, 12);
+  memcpy(&command[21], &config.MTQ_ontime_res, 4);
+  memcpy(&command[25], &config.MTQ_max_ontime, 4);
+  memcpy(&command[29], &config.RW_max_torque, 12);
+  memcpy(&command[41], &config.RW_max_moment, 12);
+  memcpy(&command[53], &config.RW_inertia, 12);
+  memcpy(&command[65], &config.RW_torque_inc, 4);
+  memcpy(&command[69], &config.MTM1, 48);
+  memcpy(&command[117], &config.MTM2, 48);
+  command[165] = (config.CC_signal.pin << 4) | config.CC_signal.port;
+  command[166] = (config.CC_motor.pin << 4) | config.CC_motor.port;
+  command[167] = (config.CC_common.pin << 4) | config.CC_common.port;
+  command[168] = (config.CS1.pin << 4) | config.CS1.port;
+  command[169] = (config.CS2.pin << 4) | config.CS2.port;
+  command[170] = (config.cubeStar.pin << 4) | config.cubeStar.port;
+  command[171] = (config.CW1.pin << 4) | config.CW1.port;
+  command[172] = (config.CW2.pin << 4) | config.CW2.port;
+  command[173] = (config.CW3.pin << 4) | config.CW3.port;
+  return adcs_telecommand(command, 174);
+}
+
+/**
+ * @brief
+ * 		Get current hard-coded system configuration
+ * @param config
+ * 		Refer to table 201
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_system_config(adcs_sysConfig* config) {
+  uint8_t telemetry[173];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_SYSTEM_CONFIG_ID, telemetry, 173);
+  config->acp_type = telemetry[0] & 0xF;
+  config->special_ctrl_sel = (telemetry[0] >> 4) & 0xF;
+  config->CC_sig_ver = telemetry[1];
+  config->CC_motor_ver = telemetry[2];
+  config->CS1_ver = telemetry[3];
+  config->CS2_ver = telemetry[4];
+  config->CS1_cam = telemetry[5] & 0xF;
+  config->CS2_cam = (telemetry[5] >> 4) & 0xF;
+  config->cubeStar_ver = telemetry[6];
+  config->GPS = telemetry[7] & 0xF;
+  config->include_MTM2 = (telemetry[7] >> 4) & 1;
+  memcpy(&config->MTQ_max_dipole, &telemetry[8], 12);
+  memcpy(&config->MTQ_ontime_res, &telemetry[20], 4);
+  memcpy(&config->MTQ_max_ontime, &telemetry[24], 4);
+  memcpy(&config->RW_max_torque, &telemetry[28], 12);
+  memcpy(&config->RW_max_moment, &telemetry[40], 12);
+  memcpy(&config->RW_inertia, &telemetry[52], 12);
+  memcpy(&config->RW_torque_inc, &telemetry[64], 4);
+  memcpy(&config->MTM1, &telemetry[68], 48);
+  memcpy(&config->MTM2, &telemetry[116], 48);
+  config->CC_signal.port = telemetry[164] & 0xF;
+  config->CC_signal.pin = (telemetry[164] >> 4) & 0xF;
+  config->CC_motor.port = telemetry[165] & 0xF;
+  config->CC_motor.pin = (telemetry[165] >> 4) & 0xF;
+  config->CC_common.port = telemetry[166] & 0xF;
+  config->CC_common.pin = (telemetry[166] >> 4) & 0xF;
+  config->CS1.port = telemetry[167] & 0xF;
+  config->CS1.pin = (telemetry[167] >> 4) & 0xF;
+  config->CS2.port = telemetry[168] & 0xF;
+  config->CS2.pin = (telemetry[168] >> 4) & 0xF;
+  config->cubeStar.port = telemetry[169] & 0xF;
+  config->cubeStar.pin = (telemetry[169] >> 4) & 0xF;
+  config->CW1.port = telemetry[170] & 0xF;
+  config->CW1.pin = (telemetry[170] >> 4) & 0xF;
+  config->CW2.port = telemetry[171] & 0xF;
+  config->CW2.pin = (telemetry[171] >> 4) & 0xF;
+  config->CW3.port = telemetry[172] & 0xF;
+  config->CW3.pin = (telemetry[172] >> 4) & 0xF;
+  return state;
+}
+
+/**
+ * @brief
+ * 		Set magnetorquer configuration parameters
+ * 		(Table 179)
+ * @param params
+ * 		axis selection : Refer to table 180
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_MTQ_config(xyzu8 params) {
+  uint8_t command[4];
+  command[0] = SET_MTQ_CONFIG_ID;
+  memcpy(&command[1], &params, 3);
+  return adcs_telecommand(command, 4);
+}
+
+/**
+ * @brief
+ * 		Set wheel configuration parameters
+ * 		(Table 181)
+ * @param RW
+ * 		an array for the 4 wheels' axis selection (Table 180)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_RW_config(uint8_t* RW) {
+  uint8_t command[5];
+  command[0] = SET_WHEEL_CONFIG_ID;
+  memcpy(&command[1], &RW[0], 4);
+  return adcs_telecommand(command, 5);
+}
+
+/**
+ * @brief
+ * 		Set rate gyro configuration parameters
+ * 		(Table 182)
+ * @param params.sensor_offset
+ * 		rate sensor offset [deg/s]
+ * @param coef
+ * 		formatted_value = coef * raw_value
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_rate_gyro(rate_gyro_config params) {
+  uint8_t command[11];
+  command[0] = SET_RATE_GYRO_CONFIG_ID;
+  memcpy(&command[1], &params.gyro, 3);
+  float coef = 0.001;
+  xyz16 raw_val;
+  raw_val.x = params.sensor_offset.x / coef;
+  raw_val.y = params.sensor_offset.y / coef;
+  raw_val.z = params.sensor_offset.z / coef;
+  memcpy(&command[4], &raw_val, 6);
+  command[10] = params.rate_sensor_mult;
+  return adcs_telecommand(command, 11);
+}
+
+/**
+ * @brief
+ * 		Set photodiode pointing directions and scale factors
+ * 		(Table 183)
+ * @param config
+ * 		css axis selection : Refer to table 180
+ * @param rel_scale
+ * 		relative scaling factor
+ * @param coef
+ * 		formatted_value = coef * raw_value
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_css_config(css_config config) {
+  uint8_t command[22];
+  command[0] = SET_CSS_CONFIG_ID;
+  memcpy(&command[1], &config.config[0], 10);
+  uint8_t raw_val[10];
+  float coef = 0.01;
+  for (int i = 0; i < 10; i++) {
+    raw_val[i] = config.rel_scale[i] / coef;
+  }
+  memcpy(&command[11], &raw_val[0], 10);
+  command[21] = config.threshold;
+  return adcs_telecommand(command, 22);
+}
+
+/**
+ * @brief
+ * 		Set configurations of CubeStar
+ * 		(Table 188)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_star_track_config(cubestar_config config) {
+  uint8_t command[54];
+  command[0] = SET_STAR_TRACK_CONFIG_ID;
+  xyz16 raw_val;
+  float coef = 0.01;
+  raw_val.x = config.mounting_angle.x / coef;
+  raw_val.y = config.mounting_angle.y / coef;
+  raw_val.z = config.mounting_angle.z / coef;
+  memcpy(&command[1], &raw_val, 6);
+  memcpy(&command[7], &config.exposure_t, 45);
+  command[52] = (config.loc_predict_en >> 1) | config.module_en;
+  uint8_t search_wid = config.search_wid / 5;  //*
+  command[53] = search_wid;
+  return adcs_telecommand(command, 54);
+}
+
+/**
+ * @brief
+ * 		Set CubeSense configuration parameters
+ * 		(Table 189)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_cubesense_config(cubesense_config params) {
+  uint8_t command[113];
+  command[0] = SET_CUBESENSE_CONFIG_ID;
+  xyz16 raw_val_angle1, raw_val_angle2;
+  uint16_t raw_boresight_x1, raw_boresight_y1;
+  uint16_t raw_boresight_x2, raw_boresight_y2;
+  float coef = 0.01;
+
+  raw_val_angle1.x = params.cam1_sense.mounting_angle.x / coef;
+  raw_val_angle1.y = params.cam1_sense.mounting_angle.y / coef;
+  raw_val_angle1.z = params.cam1_sense.mounting_angle.z / coef;
+  memcpy(&command[1], &raw_val_angle1, 6);
+  command[7] = params.cam1_sense.detect_th;
+  command[8] = params.cam1_sense.auto_adjust;
+  memcpy(&command[9], &params.cam1_sense.exposure_t, 2);
+  raw_boresight_x1 = params.cam1_sense.boresight_x / coef;
+  raw_boresight_y1 = params.cam1_sense.boresight_y / coef;
+  memcpy(&command[11], &raw_boresight_x1, 2);
+  memcpy(&command[12], &raw_boresight_y1, 2);
+  raw_val_angle2.x = params.cam2_sense.mounting_angle.x / coef;
+  raw_val_angle2.y = params.cam2_sense.mounting_angle.y / coef;
+  raw_val_angle2.z = params.cam2_sense.mounting_angle.z / coef;
+  memcpy(&command[14], &raw_val_angle2, 6);
+  command[20] = params.cam2_sense.detect_th;
+  command[21] = params.cam2_sense.auto_adjust;
+  memcpy(&command[22], &params.cam2_sense.exposure_t, 2);
+  raw_boresight_x2 = params.cam2_sense.boresight_x / coef;
+  raw_boresight_y2 = params.cam2_sense.boresight_y / coef;
+  memcpy(&command[23], &raw_boresight_x2, 2);
+  memcpy(&command[25], &raw_boresight_y2, 2);
+
+  memcpy(&command[27], &params.nadir_max_deviate,
+         84);  // copy the rest of the struct directly
+  return adcs_telecommand(command, 113);
+}
+
+/**
+ * @brief
+ * 		Set Magnetometers configuration parameters
+ * 		(Table 190, 191)
+ * @param mtm
+ * 		Select primary (1) or secondary(2) Magnetometer
+ * @attention
+ * 		The order of input matrix is s11, s12, s13, s21, ...
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_mtm_config(mtm_config params, uint8_t mtm) {
+  uint8_t command[31];
+  if (mtm == 1) {
+    command[0] = SET_MTM_CONFIG_ID;
+  } else if (mtm == 2) {
+    command[0] = SET_MTM2_CONFIG_ID;
+  } else {
+    return ADCS_INVALID_PARAMETERS;
+  }
+  xyz16 raw_val_angle, raw_val_offset;
+  float coef = 0.01;
+  raw_val_angle.x = params.mounting_angle.x / coef;
+  raw_val_angle.y = params.mounting_angle.y / coef;
+  raw_val_angle.z = params.mounting_angle.z / coef;
+  memcpy(&command[1], &raw_val_angle, 6);
+  coef = 0.001;
+  raw_val_offset.x = params.channel_offset.x / coef;
+  raw_val_offset.y = params.channel_offset.y / coef;
+  raw_val_offset.z = params.channel_offset.z / coef;
+  memcpy(&command[7], &raw_val_offset, 6);
+  int16_t cell[9];
+  int j = 0;
+  for (int i = 0; i < 3; i++) {
+    cell[j + 4 * i] = params.sensitivity_mat[i] / coef;  // diagonal
+  }
+  for (int i = 0; i < 3; i++) {
+    cell[3 + i] = params.sensitivity_mat[1 + i] / coef;
+    cell[6 + i] = params.sensitivity_mat[5 + i] / coef;
+  }
+  memcpy(&command[13], &cell, 18);
+  return adcs_telecommand(command, 31);
+}
+
+/**
+ * @brief
+ * 		Set controller gains and reference values for Detumbling control
+ * mode (Table 195)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_detumble_config(detumble_config config) {
+  uint8_t command[15];
+  command[0] = SET_DETUMBLE_PARAM_ID;
+  memcpy(&command[1], &config, 8);
+  int16_t raw_spin_rate;
+  float coef = 0.001;
+  raw_spin_rate = config.spin_rate / coef;
+  memcpy(&command[9], &raw_spin_rate, 2);
+  memcpy(&command[11], &config.fast_bDot, 4);
+  return adcs_telecommand(command, 15);
+}
+
+/**
+ * @brief
+ * 		Set controller gains and reference value for Y-wheel control
+ * mode (Table 196)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_ywheel_config(ywheel_ctrl_config params) {
+  uint8_t command[21];
+  command[0] = SET_YWHEEL_CTRL_PARAM_ID;
+  memcpy(&command[1], &params, 20);
+  return adcs_telecommand(command, 21);
+}
+
+/**
+ * @brief
+ * 		Set controller gains and reference value for reaction wheel
+ * control mode (Table 197)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_rwheel_config(rwheel_ctrl_config params) {
+  uint8_t command[14];
+  command[0] = SET_RWHEEL_CTRL_PARAM_ID;
+  memcpy(&command[1], &params, 12);
+  command[13] = (params.auto_transit << 7) | params.sun_point_facet;
+  return adcs_telecommand(command, 14);
+}
+
+/**
+ * @brief
+ * 		Set controller gains for tracking control mode
+ * 		(Table 198)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_tracking_config(track_ctrl_config params) {
+  uint8_t command[14];
+  command[0] = SET_TRACK_CTRL_ID;
+  memcpy(&command[1], &params, 13);
+  return adcs_telecommand(command, 14);
+}
+
+/**
+ * @brief
+ * 		Set the satellite moment of inertia matrix
+ * 		(Table 199)
+ * @param cell
+ * 		diag: Ixx, Iyy, Izz
+ * 		nondiag: Ixy, Ixz, Iyz
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_MoI_mat(moment_inertia_config cell) {
+  uint8_t command[25];
+  command[0] = SET_MOMENT_INERTIA_MAT_ID;
+  memcpy(&command[1], &cell, 24);
+  return adcs_telecommand(command, 25);
+}
+
+/**
+ * @brief
+ * 		Set estimation noise covariance and sensor mask
+ * 		(Table 200)
+ * @param config.select_arr
+ * 		All the bool "use" and auto-transit selects in Table 200
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_estimation_config(estimation_config config) {
+  uint8_t command[32];
+  command[0] = SET_ESTIMATE_PARAM;
+  memcpy(&command[1], &config, 28);
+  for (int i = 0; i < 6; i++) {
+    command[29] |= (config.select_arr[i] << i);
+  }
+  command[29] |= (config.MTM_mode << 6);
+  command[30] = config.MTM_select | (config.select_arr[7] << 2);
+  command[31] = config.cam_sample_period;
+  return adcs_telecommand(command, 32);
+}
+
+/**
+ * @brief
+ * 		Set settings for user-coded estimation and control modes
+ * 		(Table 208)
+ * @param setting
+ * 		Two arrays of length 48
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_usercoded_setting(usercoded_setting setting) {
+  uint8_t command[97];
+  command[0] = SET_USERCODED_PARAM_ID;
+  memcpy(&command[1], &setting, 96);
+  return adcs_telecommand(command, 97);
+}
+
+/**
+ * @brief
+ * 		Set settings for GPS augmented SGP4
+ * 		(Table 209)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_asgp4_setting(aspg4_setting setting) {
+  if ((setting.inclination < 0) | (setting.RAAN < 0) | (setting.ECC < 0) |
+      (setting.AoP < 0) | (setting.time < 0) | (setting.pos < 0) |
+      (setting.max_pos_err < 0) | (setting.pos_sd < 0) | (setting.vel_sd < 0) |
+      (setting.time_gain < 0) | (setting.max_lag < 0)) {
+    return ADCS_INVALID_PARAMETERS;
+  }
+  uint8_t command[31];
+  command[0] = SET_ASGP4_PARAM_ID;
+  float coef = 0.001;
+  uint16_t inclination = setting.inclination / coef;
+  memcpy(&command[1], &inclination, 2);
+  uint16_t RAAN = setting.RAAN / coef;
+  memcpy(&command[3], &RAAN, 2);
+  uint16_t ECC = setting.ECC / coef;
+  memcpy(&command[5], &ECC, 2);
+  uint16_t AoP = setting.AoP / coef;
+  memcpy(&command[7], &AoP, 2);
+  uint16_t time = setting.time / coef;
+  memcpy(&command[9], &time, 2);
+  uint16_t pos = setting.pos / coef;
+  memcpy(&command[11], &pos, 2);
+  coef = 0.1;
+  uint8_t max_pos_err = setting.max_pos_err / coef;
+  command[13] = max_pos_err;
+  command[14] = setting.asgp4_filter;
+  coef = 0.0000001;
+  int32_t xp = setting.xp / coef;
+  memcpy(&command[15], &xp, 4);
+  int32_t yp = setting.yp / coef;
+  memcpy(&command[19], &yp, 4);
+  command[23] = setting.gps_rollover;
+  coef = 0.1;
+  uint8_t pos_sd = setting.pos_sd / coef;
+  command[24] = pos_sd;
+  coef = 0.01;
+  uint8_t vel_sd = setting.vel_sd / coef;
+  command[25] = vel_sd;
+  command[26] = setting.min_sat;
+  uint8_t time_gain = setting.time_gain / coef;
+  command[27] = time_gain;
+  uint8_t max_lag = setting.max_lag / coef;
+  command[28] = max_lag;
+  memcpy(&command[29], &setting.min_samples, 2);
+  return adcs_telecommand(command, 31);
+}
+
+/**
+ * @brief
+ * 		Get current configuration
+ * @param config
+ * 		Refer to table 192
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_full_config(adcs_config* config) {
+  uint8_t telemetry[504];
+  float coef;
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_FULL_CONFIG_ID, telemetry, 504);
+  memcpy(&config->MTQ, &telemetry[0], 3);
+  memcpy(&config->RW[0], &telemetry[3], 4);
+  memcpy(&config->rate_gyro, &telemetry[7], 3);
+  get_xyz(&config->rate_gyro.sensor_offset, &telemetry[10], 0.001);
+  config->rate_gyro.rate_sensor_mult = telemetry[16];
+  memcpy(&config->css, &telemetry[17], 10);
+  coef = 0.01;
+  for (int i = 0; i < 10; i++) {
+    config->css.rel_scale[i] = telemetry[27 + i] * coef;
+  }
+  config->css.threshold = telemetry[37];
+  get_xyz(&config->cubesense.cam1_sense.mounting_angle, &telemetry[38], 0.01);
+  config->cubesense.cam1_sense.detect_th = telemetry[44];
+  config->cubesense.cam1_sense.auto_adjust = telemetry[45] & 1;
+  memcpy(&config->cubesense.cam1_sense.exposure_t, &telemetry[46], 2);
+  config->cubesense.cam1_sense.boresight_x =
+      ((telemetry[49] << 8) | telemetry[48]) * coef;
+  config->cubesense.cam1_sense.boresight_y =
+      ((telemetry[51] << 8) | telemetry[50]) * coef;
+  get_xyz(&config->cubesense.cam2_sense.mounting_angle, &telemetry[52], 0.01);
+  config->cubesense.cam2_sense.detect_th = telemetry[58];
+  config->cubesense.cam2_sense.auto_adjust = telemetry[59] & 1;
+  memcpy(&config->cubesense.cam2_sense.exposure_t, &telemetry[60], 2);
+  config->cubesense.cam2_sense.boresight_x =
+      ((telemetry[63] << 8) | telemetry[62]) * coef;
+  config->cubesense.cam2_sense.boresight_y =
+      ((telemetry[65] << 8) | telemetry[64]) * coef;
+  memcpy(&config->cubesense.nadir_max_deviate, &telemetry[66], 84);
+  get_xyz(&config->MTM1.mounting_angle, &telemetry[150], 0.01);
+  get_xyz(&config->MTM1.channel_offset, &telemetry[156], 0.001);
+  get_3x3(config->MTM1.sensitivity_mat, &telemetry[162], 0.001);
+  get_xyz(&config->MTM2.mounting_angle, &telemetry[180], 0.01);
+  get_xyz(&config->MTM2.channel_offset, &telemetry[186], 0.001);
+  get_3x3(config->MTM2.sensitivity_mat, &telemetry[192], 0.001);
+  get_xyz(&config->star_tracker.mounting_angle, &telemetry[210], 0.01);
+  memcpy(&config->star_tracker.exposure_t, &telemetry[216], 45);
+  config->star_tracker.module_en = telemetry[261] & 0x1;
+  config->star_tracker.loc_predict_en = telemetry[261] & 0x2;  // second bit
+  config->star_tracker.search_wid = telemetry[262] * 5;
+  memcpy(&config->detumble, &telemetry[263], 8);
+  coef = 0.001;
+  config->detumble.spin_rate =
+      uint82int16(telemetry[271], telemetry[272]) * coef;
+  memcpy(&config->detumble.fast_bDot, &telemetry[273], 4);
+  memcpy(&config->ywheel, &telemetry[277], 20);
+  memcpy(&config->rwheel, &telemetry[297], 12);
+  config->rwheel.sun_point_facet = telemetry[309] & 0x7F;  // 7 bits
+  config->rwheel.auto_transit = telemetry[309] & 0x80;     // 8th bit
+  memcpy(&config->tracking, &telemetry[310],
+         65);  // tracking + MoI + partially estimation
+  for (int i = 0; i < 6; i++) {
+    config->estimation.select_arr[i] = (telemetry[375] >> i) & 1;
+  }
+  config->estimation.MTM_mode = (telemetry[375] >> 6) & 0x3;
+  config->estimation.MTM_select = telemetry[376] & 0x3;
+  config->estimation.select_arr[7] = (telemetry[376] >> 2) & 1;
+  config->estimation.cam_sample_period = telemetry[377];
+  coef = 0.001;
+  config->aspg4.inclination = ((telemetry[379] << 8) | telemetry[378]) * coef;
+  config->aspg4.RAAN = ((telemetry[381] << 8) | telemetry[380]) * coef;
+  config->aspg4.ECC = ((telemetry[383] << 8) | telemetry[382]) * coef;
+  config->aspg4.AoP = ((telemetry[385] << 8) | telemetry[384]) * coef;
+  config->aspg4.time = ((telemetry[387] << 8) | telemetry[386]) * coef;
+  config->aspg4.pos = ((telemetry[389] << 8) | telemetry[388]) * coef;
+  coef = 0.1;
+  config->aspg4.max_pos_err = telemetry[390] * coef;
+  config->aspg4.asgp4_filter = telemetry[391];
+  coef = 0.0000001;
+  config->aspg4.xp = uint82int32(&telemetry[392]) * coef;
+  config->aspg4.yp = uint82int32(&telemetry[396]) * coef;
+  config->aspg4.gps_rollover = telemetry[400];
+  coef = 0.1;
+  config->aspg4.pos_sd = telemetry[401] * coef;
+  coef = 0.01;
+  config->aspg4.vel_sd = telemetry[402] * coef;
+  config->aspg4.min_sat = telemetry[403];
+  config->aspg4.time_gain = telemetry[404] * coef;
+  config->aspg4.max_lag = telemetry[405] * coef;
+  config->aspg4.min_samples = (telemetry[407] << 8) | telemetry[406];
+  memcpy(&config->usercoded, &telemetry[408], 96);
+  return state;
+}

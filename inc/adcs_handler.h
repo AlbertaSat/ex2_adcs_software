@@ -179,12 +179,255 @@ typedef struct {
   xyz16 rate_sensor_temp;
 } adcs_pwr_temp;
 
+typedef struct {
+  double inclination;
+  double ECC;    // eccentricity [deg]
+  double RAAN;   // right-ascension of the ascending node
+  double AOP;    // argument of perigee [deg]
+  double Bstar;  // B-star drag term [deg]
+  double MM;     // mean motion [orbit/day]
+  double MA;     // mean anomaly [deg]
+  double epoch;  // [year.day]
+} adcs_sgp4;
+
+typedef struct {
+  xyz bias_d1;
+  xyz bias_d2;
+  xyz sens_s1;
+  xyz sens_s2;
+} mtm_biasSens;
+
+typedef struct {
+  uint8_t port;  // signal enable GPIO port. Table 206
+  uint8_t pin;   // signal enable GPIO port pin. Table 207
+} port_pin;
+
+typedef struct {
+  uint8_t acp_type;          // Refer to table 202
+  uint8_t special_ctrl_sel;  // Refer to table 203
+  uint8_t CC_sig_ver;        // CC: CubeControl
+  uint8_t CC_motor_ver;
+  uint8_t CS1_ver;  // CS: CubeSense
+  uint8_t CS2_ver;
+  uint8_t CS1_cam;  // Refer to table 204
+  uint8_t CS2_cam;  // Refer to table 204
+  uint8_t cubeStar_ver;
+  uint8_t GPS;  // Refer to table 205
+  bool include_MTM2;
+  xyz MTQ_max_dipole;    // MTQ: magnetorquer [A.m^2]
+  float MTQ_ontime_res;  // [s]
+  float MTQ_max_ontime;  // [s]
+  xyz RW_max_torque;     // [N.m]
+  xyz RW_max_moment;     // [Nms]
+  xyz RW_inertia;        // [kg.m^2]
+  float RW_torque_inc;   // increment [N.m]
+  mtm_biasSens MTM1;
+  mtm_biasSens MTM2;
+  port_pin CC_signal;
+  port_pin CC_motor;
+  port_pin CC_common;
+  port_pin CS1;
+  port_pin CS2;
+  port_pin cubeStar;
+  port_pin CW1;  // CW: CubeWheel
+  port_pin CW2;
+  port_pin CW3;
+} adcs_sysConfig;
+
+typedef struct {
+  xyzu8 gyro;
+  xyz sensor_offset;
+  uint8_t rate_sensor_mult;
+} rate_gyro_config;
+
+typedef struct {
+  uint8_t config[10];
+  float rel_scale[10];
+  uint8_t threshold;
+} css_config;
+
+typedef struct {
+  xyz mounting_angle;  // alpha, beta, gamma
+  uint16_t exposure_t;
+  uint16_t analog_gain;
+  uint8_t detect_th;
+  uint8_t star_th;
+  uint8_t max_star_matched;
+  uint16_t detect_timeout_t;
+  uint8_t max_pixel;
+  uint8_t min_pixel;
+  uint8_t err_margin;  // percent
+  uint16_t delay_t;
+  float centroid_x;
+  float centroid_y;
+  float focal_len;  // [mm]
+  float radical_distor_ceof1;
+  float radical_distor_ceof2;
+  float tangent_distor_ceof1;
+  float tangent_distor_ceof2;
+  uint8_t window_wid;
+  uint8_t track_margin;  // percent
+  uint8_t valid_margin;  // percent
+  bool module_en;
+  bool loc_predict_en;
+  uint8_t search_wid;  //* might need to switch to float
+} cubestar_config;
+
+typedef struct {
+  uint16_t min;
+  uint16_t max;
+} minmax;
+
+typedef struct {
+  minmax x;
+  minmax y;
+} area;
+
+typedef struct {
+  area area1;
+  area area2;
+  area area3;
+  area area4;
+  area area5;
+} cam_area;
+
+typedef struct {
+  xyz mounting_angle;  // alpha, beta, gamma
+  uint8_t detect_th;
+  bool auto_adjust;
+  uint16_t exposure_t;
+  float boresight_x;  // [pixels] //* coef
+  float boresight_y;
+} camsensor_config;
+
+typedef struct {
+  camsensor_config cam1_sense;
+  camsensor_config cam2_sense;
+  uint8_t nadir_max_deviate;
+  uint8_t nadir_max_bad_edge;
+  uint8_t nadir_max_radius;
+  uint8_t nadir_min_radius;
+  cam_area cam1_area;
+  cam_area cam2_area;
+} cubesense_config;
+
+typedef struct {
+  xyz mounting_angle;
+  xyz channel_offset;        // 1, 2, 3
+  float sensitivity_mat[9];  // Not the same order as manual!
+} mtm_config;
+
+typedef struct {
+  float spin_gain;
+  float damping_gain;
+  float spin_rate;
+  float fast_bDot;
+} detumble_config;
+
+typedef struct {
+  float control_gain;
+  float damping_gain;
+  float proportional_gain;
+  float derivative_gain;
+  float reference;  // [Nms]
+} ywheel_ctrl_config;
+
+typedef struct {
+  float proportional_gain;
+  float derivative_gain;
+  float bias_moment;
+  uint8_t sun_point_facet;  // Refer to table 180
+  bool auto_transit;
+} rwheel_ctrl_config;
+
+typedef struct {
+  float proportional_gain;
+  float derivative_gain;
+  float integral_gain;
+  uint8_t target_facet;  // Refer to table 180
+} track_ctrl_config;
+
+typedef struct {
+  xyz diag;
+  xyz nondiag;  // Ixy Ixz Iyz
+} moment_inertia_config;
+
+typedef struct {
+  float MTM_rate_nosie;
+  float EKF_noise;
+  float CSS_noise;
+  float suns_sensor_noise;
+  float nadir_sensor_noise;
+  float MTM_noise;
+  float star_track_noise;
+  uint8_t select_arr[7];
+  uint8_t MTM_mode;
+  uint8_t MTM_select;
+  uint8_t cam_sample_period;
+} estimation_config;
+
+typedef struct {
+  uint8_t controller[48];
+  uint8_t estimator[48];
+} usercoded_setting;
+
+typedef struct {
+  float inclination;
+  float RAAN;
+  float ECC;
+  float AoP;
+  float time;
+  float pos;
+  float xp;
+  float yp;
+} filter_coef;
+
+typedef struct {
+  float inclination;
+  float RAAN;
+  float ECC;
+  float AoP;
+  float time;
+  float pos;
+  float max_pos_err;
+  uint8_t asgp4_filter;  // Refer to table 193
+  float xp;
+  float yp;
+  uint8_t gps_rollover;
+  float pos_sd;
+  float vel_sd;
+  uint8_t min_sat;
+  float time_gain;
+  float max_lag;
+  uint16_t min_samples;
+} aspg4_setting;
+
+typedef struct {
+  xyzu8 MTQ;
+  uint8_t RW[4];
+  rate_gyro_config rate_gyro;
+  css_config css;
+  cubesense_config cubesense;
+  mtm_config MTM1;
+  mtm_config MTM2;
+  cubestar_config star_tracker;
+  detumble_config detumble;
+  ywheel_ctrl_config ywheel;
+  rwheel_ctrl_config rwheel;
+  track_ctrl_config tracking;
+  moment_inertia_config MoI;
+  estimation_config estimation;
+  aspg4_setting aspg4;
+  usercoded_setting usercoded;
+} adcs_config;
+
 // General functions
 int16_t uint82int16(uint8_t b1, uint8_t b2);
 int32_t uint82int32(uint8_t* address);
 uint16_t uint82uint16(uint8_t b1, uint8_t b2);
 void get_xyz(xyz* measurement, uint8_t* address, float coef);
 void get_xyz16(xyz16* measurement, uint8_t* address);
+void get_3x3(float* matrix, uint8_t* address, float coef);
 
 // send_telecommand
 ADCS_returnState adcs_telecommand(uint8_t* command, uint32_t length);
@@ -258,10 +501,10 @@ ADCS_returnState ADCS_get_current_state(adcs_state* data);
 ADCS_returnState ADCS_get_jpg_cnv_progress(uint8_t* percentage, uint8_t* result,
                                            uint8_t* file_counter);
 ADCS_returnState ADCS_get_cubeACP_state(uint8_t* flags_arr);
-ADCS_returnState ADCS_get_execution_times(uint8_t* adcs_update,
-                                          uint8_t* sensor_comms,
-                                          uint8_t* sgp4_propag,
-                                          uint8_t* igrf_model);
+ADCS_returnState ADCS_get_execution_times(uint16_t* adcs_update,
+                                          uint16_t* sensor_comms,
+                                          uint16_t* sgp4_propag,
+                                          uint16_t* igrf_model);
 ADCS_returnState ADCS_get_ACP_loop_stat(uint16_t* time,
                                         uint8_t* execution_point);
 ADCS_returnState ADCS_get_img_save_progress(uint8_t* percentage,
@@ -282,5 +525,40 @@ ADCS_returnState ADCS_get_MTM2_measurements(xyz16* Mag);
 void get_current(float* measurement, uint8_t* address, float coef);
 void get_temp(float* measurement, uint8_t* address, float coef);
 ADCS_returnState ADCS_get_power_temp(adcs_pwr_temp* measurements);
+
+// ACP Config Msgs
+ADCS_returnState ADCS_set_power_control(uint8_t* control);
+ADCS_returnState ADCS_get_power_control(uint8_t* control);
+ADCS_returnState ADCS_set_attitude_angle(xyz att_angle);
+ADCS_returnState ADCS_get_attitude_angle(xyz* att_angle);
+ADCS_returnState ADCS_set_track_controller(xyz target);
+ADCS_returnState ADCS_get_track_controller(xyz* target);
+ADCS_returnState ADCS_set_log_config(uint8_t* flags_arr, uint16_t period,
+                                     uint8_t dest, uint8_t log);
+ADCS_returnState ADCS_get_log_config(uint8_t* flags_arr, uint16_t* period,
+                                     uint8_t* dest, uint8_t log);
+ADCS_returnState ADCS_set_intertial_ref(xyz inter_ref);
+ADCS_returnState ADCS_get_intertial_ref(xyz* inter_ref);
+
+ADCS_returnState ADCS_set_sgp4_orbit_params(adcs_sgp4 params);
+ADCS_returnState ADCS_get_sgp4_orbit_params(adcs_sgp4* params);
+ADCS_returnState ADCS_set_system_config(adcs_sysConfig config);
+ADCS_returnState ADCS_get_system_config(adcs_sysConfig* config);
+ADCS_returnState ADCS_set_MTQ_config(xyzu8 params);
+ADCS_returnState ADCS_set_RW_config(uint8_t* RW);
+ADCS_returnState ADCS_set_rate_gyro(rate_gyro_config params);
+ADCS_returnState ADCS_set_css_config(css_config config);
+ADCS_returnState ADCS_set_star_track_config(cubestar_config config);
+ADCS_returnState ADCS_set_cubesense_config(cubesense_config params);
+ADCS_returnState ADCS_set_mtm_config(mtm_config params, uint8_t mtm);
+ADCS_returnState ADCS_set_detumble_config(detumble_config config);
+ADCS_returnState ADCS_set_ywheel_config(ywheel_ctrl_config params);
+ADCS_returnState ADCS_set_rwheel_config(rwheel_ctrl_config params);
+ADCS_returnState ADCS_set_tracking_config(track_ctrl_config params);
+ADCS_returnState ADCS_set_MoI_mat(moment_inertia_config cell);
+ADCS_returnState ADCS_set_estimation_config(estimation_config config);
+ADCS_returnState ADCS_set_usercoded_setting(usercoded_setting setting);
+ADCS_returnState ADCS_set_asgp4_setting(aspg4_setting setting);
+ADCS_returnState ADCS_get_full_config(adcs_config* config);
 
 #endif /* ADCS_HANDLER_H */

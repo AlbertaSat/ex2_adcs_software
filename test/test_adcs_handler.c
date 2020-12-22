@@ -259,6 +259,7 @@ void test_uint82int16(void) {
   uint8_t b12[2];
   b12[1] = b16 >> 8;
   b12[0] = b16 & 0xFF;
+  //  memcpy(&b12[0], &b16, 2);
   int16_t b = uint82int16(b12[0], b12[1]);
   TEST_ASSERT_FLOAT_WITHIN(0.1, b16, b);
 
@@ -501,4 +502,14 @@ void test_ADCS_ACP_power_temp(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.0001, measurements.MTM_temp, 0.1 * temp);
 
   free(reply);
+}
+
+void test_get_3x3(void) {
+  int16_t mat[9] = {-132, 35, 471, 203, 14, 87, -148, -1, 1784};
+  uint8_t frame[18];
+  memcpy(&frame[0], &mat[0], 18);
+  adcs_config config;
+  get_3x3(&config.MTM1.sensitivity_mat[0], &frame[0], 1);
+  TEST_ASSERT_FLOAT_WITHIN(0.1, config.MTM1.sensitivity_mat[0], mat[0]);
+  TEST_ASSERT_FLOAT_WITHIN(0.1, config.MTM1.sensitivity_mat[5], mat[5]);
 }
