@@ -75,6 +75,38 @@ typedef enum Common_Telecommand_IDs {
   INITIATE_DOWNLOAD_BURST_ID = 119
 } Common_Telecommand_IDs;
 
+typedef enum Common_Telemetry_IDs {
+  NODE_IDENTIFICATION_ID = 128,
+  BOOT_RUNNING_STAT = 129,
+  BOOT_IDX_STAT = 130,
+  LAST_LOGGED_EVENT_ID = 141,
+  SD_FORMAT_PROGRESS = 234,
+  LAST_TC_ACK_ID = 240,
+  FILE_DL_BUFFER_ID = 241,
+  DL_BLOCK_STAT_ID = 242,
+  FILE_INFO_ID = 243,
+  INIT_UPLOAD_STAT_ID = 244,
+  FINIALIZE_UPLOAD_STAT_ID = 245,
+  UPLOAD_CRC16_ID = 246,
+  SRAM_LATCHUP_COUNT_ID = 142,
+  EDAC_ERR_COUNT_ID = 143,
+  COMMS_STAT_ID = 144
+} Common_Telemetry_IDs;
+
+typedef enum Common_ConfigMsgs_IDs {
+  SET_CACHE_EN_STATE_ID = 3,
+  SET_SRAM_SCRUB_PARAM_ID = 8,
+  SET_UNIX_TIME_SAVE_ID = 9,
+  SET_HOLE_MAP_ID = 119,  // 119 = hole_map1 - 1 (See the function)
+  SET_CURRENT_UNIX_TIME = 2,
+
+  GET_CACHE_EN_STATE_ID = 131,
+  GET_SRAM_SCRUB_PARAM_ID = 134,
+  GET_UNIX_TIME_SAVE_ID = 145,
+  GET_HOLE_MAP_ID = 246,  // 246 = hole_map1 - 1 (See the function)
+  GET_CURRENT_UNIX_TIME = 140,
+} Common_ConfigMsgs_IDs;
+
 typedef enum BootLoader_Telecommand_IDs {
   CLEAR_ERR_FLAGS_ID = 7,
   SET_BOOT_INDEX_ID = 100,

@@ -172,7 +172,7 @@ void get_3x3(float* matrix, uint8_t* address, float coef) {
   }
 }
 
-/*************************** Commond TCs ***************************/
+/*************************** Common TCs ***************************/
 /**
  * @brief
  * 		Perform a reset.
@@ -399,6 +399,478 @@ ADCS_returnState ADCS_initiate_download_burst(uint8_t msg_length,
   command[1] = msg_length;
   command[2] = ignore_hole_map;
   return adcs_telecommand(command, 3);
+}
+
+/*************************** Common TMs ***************************/
+/**
+ * @brief
+ * 		Get identification information for this node
+ * @param interface_ver
+ * 		Should have a value of 1
+ * @param time_s
+ * 		number of seconds since processor start-up
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_node_identification(
+    uint8_t* node_type, uint8_t* interface_ver, uint8_t* major_firm_ver,
+    uint8_t* minor_firm_ver, uint16_t* runtime_s, uint16_t* runtime_ms) {
+  uint8_t telemetry[8];
+  ADCS_returnState state;
+  state = adcs_telemetry(NODE_IDENTIFICATION_ID, telemetry, 8);
+  *node_type = telemetry[0];
+  *interface_ver = telemetry[1];
+  *major_firm_ver = telemetry[2];
+  *minor_firm_ver = telemetry[3];
+  *runtime_s = (telemetry[5] << 8) | telemetry[4];   // [s]
+  *runtime_ms = (telemetry[7] << 8) | telemetry[6];  // [ms]
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get Boot And Running Program Status
+ * @param mcu_reset_cause
+ * 		Possible values: 0-15. Refer to Table 29
+ * @param boot_cause
+ * 		Possible values: 0-5. Refer to Table 30
+ * @param boot_cause
+ * 		Possible values: 1,2. Refer to Table 31
+ * @attention
+ * 		The firmware version is not included since it can be requested in
+ * the previous function
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_boot_program_stat(uint8_t* mcu_reset_cause,
+                                            uint8_t* boot_cause,
+                                            uint16_t* boot_count,
+                                            uint8_t* boot_idx) {
+  uint8_t telemetry[6];
+  ADCS_returnState state;
+  state = adcs_telemetry(BOOT_RUNNING_STAT, telemetry, 6);
+  *mcu_reset_cause = telemetry[0] & 0xF;
+  *boot_cause = (telemetry[0] >> 4) & 0xF;
+  *boot_count = telemetry[2] << 8 | telemetry[1];
+  *boot_idx = telemetry[3];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get current selected boot index and status of last boot
+ * @param program_idx
+ * 		Possible values: 1,2. Refer to Table 31
+ * @param boot_stat
+ * 		Possible values: 0-4. Refer to Table 33
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_boot_index(uint8_t* program_idx, uint8_t* boot_stat) {
+  uint8_t telemetry[2];
+  ADCS_returnState state;
+  state = adcs_telemetry(BOOT_IDX_STAT, telemetry, 2);
+  *program_idx = telemetry[0];
+  *boot_stat = telemetry[1];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get Last Logged Event (relative to pointer - adjusted via Advance
+ * and Reset TCs (3 & 4)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_last_logged_event(uint32_t* time, uint8_t* event_id,
+                                            uint8_t* event_param) {
+  uint8_t telemetry[6];
+  ADCS_returnState state;
+  state = adcs_telemetry(LAST_LOGGED_EVENT_ID, telemetry, 6);
+  *time = (telemetry[3] << 24) | (telemetry[2] << 16) | (telemetry[1] << 8) |
+          telemetry[0];
+  *event_id = telemetry[4];
+  *event_param = telemetry[5];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get SD card format or erase progress
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_SD_format_progress(bool* format_busy,
+                                             bool* erase_all_busy) {
+  uint8_t telemetry[1];
+  ADCS_returnState state;
+  state = adcs_telemetry(SD_FORMAT_PROGRESS, telemetry, 1);
+  *format_busy = telemetry[0] & 0x1;
+  *erase_all_busy = telemetry[0] & 0x2;
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get the acknowledge status of the previously sent command
+ * @param tc_err_stat
+ * 		Status of last processed TC. Possible values in Table 40
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_TC_ack(uint8_t* last_tc_id, bool* tc_processed,
+                                 ADCS_returnState* tc_err_stat,
+                                 uint8_t* tc_err_idx) {
+  uint8_t telemetry[4];
+  ADCS_returnState state;
+  state = adcs_telemetry(LAST_TC_ACK_ID, telemetry, 4);
+  *last_tc_id = telemetry[0];
+  *tc_processed = telemetry[1] & 1;
+  *tc_err_stat = telemetry[2];
+  *tc_err_idx = telemetry[3];
+  return state;
+}
+
+/**
+ * @brief
+ * 		File Download buffer 20-byte packet
+ * @param file
+ * 		A 20-byte file
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_file_download_buffer(uint16_t* packet_count,
+                                               uint8_t* file[20]) {
+  uint8_t telemetry[22];
+  ADCS_returnState state;
+  state = adcs_telemetry(FILE_DL_BUFFER_ID, telemetry, 22);
+  *packet_count = (telemetry[1] << 8) | telemetry[0];
+  memcpy(&file, &telemetry[2], 20);
+  return state;
+}
+
+/**
+ * @brief
+ * 		Status about download block preparation
+ * @param param_err
+ * 		The combination of message length and hole map resulted in invalid
+ * array lengths
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_file_download_block_stat(bool* ready, bool* param_err,
+                                                   uint16_t* crc16_checksum,
+                                                   uint16_t* length) {
+  uint8_t telemetry[5];
+  ADCS_returnState state;
+  state = adcs_telemetry(DL_BLOCK_STAT_ID, telemetry, 5);
+  *ready = telemetry[0] & 0x1;
+  *param_err = telemetry[0] & 0x2;
+  *crc16_checksum = (telemetry[2] << 8) + telemetry[1];
+  *length = (telemetry[4] << 8) | telemetry[3];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get file information
+ * @param type
+ * 		File_type. Possible values: 2,3,4,15. Refer to table 16
+ * @param time
+ * 		File Date and Time (in MS-DOS format) [s]
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_file_info(uint8_t* type, bool* updating,
+                                    uint8_t* counter, uint32_t* size,
+                                    uint32_t* time, uint16_t* crc16_checksum) {
+  uint8_t telemetry[12];
+  ADCS_returnState state;
+  state = adcs_telemetry(FILE_INFO_ID, telemetry, 12);
+  *type = telemetry[0] & 0xF;
+  *updating = (telemetry[0] >> 4) & 1;
+  *counter = telemetry[1];
+  *size = (telemetry[5] << 24) | (telemetry[4] << 16) | (telemetry[3] << 8) |
+          telemetry[2];
+  *time = (telemetry[9] << 24) | (telemetry[8] << 16) | (telemetry[7] << 8) |
+          telemetry[6];
+  *crc16_checksum = (telemetry[11] << 8) | telemetry[10];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Initialize Upload status
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_init_upload_stat(bool* busy) {
+  uint8_t telemetry[1];
+  ADCS_returnState state;
+  state = adcs_telemetry(INIT_UPLOAD_STAT_ID, telemetry, 1);
+  *busy = telemetry[0] & 0x1;
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get block finalization status
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_finalize_upload_stat(bool* busy, bool* err) {
+  uint8_t telemetry[1];
+  ADCS_returnState state;
+  state = adcs_telemetry(FINIALIZE_UPLOAD_STAT_ID, telemetry, 1);
+  *busy = telemetry[0] & 0x1;
+  *busy = telemetry[0] & 0x2;
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get file upload Block CRC16 Checksum
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_upload_crc16_checksum(uint16_t* checksum) {
+  uint8_t telemetry[2];
+  ADCS_returnState state;
+  state = adcs_telemetry(UPLOAD_CRC16_ID, telemetry, 2);
+  *checksum = (telemetry[1] << 8) | telemetry[0];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get SRAM Latchup counters
+ * @details
+ * 		Refer to table 35
+ * @attention
+ * 		The size of TM is more than requested data
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_SRAM_latchup_count(uint16_t* sram1, uint16_t* sram2) {
+  uint8_t telemetry[6];
+  ADCS_returnState state;
+  state = adcs_telemetry(SRAM_LATCHUP_COUNT_ID, telemetry, 6);
+  *sram1 = (telemetry[1] << 8) | telemetry[0];
+  *sram2 = (telemetry[3] << 8) | telemetry[2];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get EDAC Error Counters
+ * @details
+ * 		Refer to table 36
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_EDAC_err_count(uint16_t* single_sram,
+                                         uint16_t* double_sram,
+                                         uint16_t* multi_sram) {
+  uint8_t telemetry[6];
+  ADCS_returnState state;
+  state = adcs_telemetry(EDAC_ERR_COUNT_ID, telemetry, 6);
+  *single_sram = (telemetry[1] << 8) | telemetry[0];
+  *double_sram = (telemetry[3] << 8) | telemetry[2];
+  *multi_sram = (telemetry[5] << 8) | telemetry[4];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get communication status - includes TC and TM counters and error
+ * flags
+ * @param flags_arr
+ * 		An array of flags. Refer to table 37
+ * @attention
+ * 		The size of TM is more than requested data
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_comms_stat(uint16_t* TC_num, uint16_t* TM_num,
+                                     uint8_t* flags_arr) {
+  uint8_t telemetry[6];
+  ADCS_returnState state;
+  state = adcs_telemetry(COMMS_STAT_ID, telemetry, 6);
+  *TC_num = (telemetry[1] << 8) | telemetry[0];
+  *TM_num = (telemetry[3] << 8) | telemetry[2];
+  for (int i = 0; i < 6; i++) {
+    *(flags_arr + i) = (telemetry[4] >> i) & 1;
+  }
+  return state;
+}
+
+/************************* Common Config Msgs *************************/
+/**
+ * @brief
+ * 		Set cache enabled state
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_cache_en_state(bool en_state) {
+  uint8_t command[2];
+  command[0] = SET_CACHE_EN_STATE_ID;
+  command[1] = en_state;
+  return adcs_telecommand(command, 2);
+}
+
+/**
+ * @brief
+ * 		Set SRAM scrubbing size
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_sram_scrub_size(uint16_t size) {
+  uint8_t command[3];
+  command[0] = SET_SRAM_SCRUB_PARAM_ID;
+  memcpy(&command[1], &size, 2);
+  return adcs_telecommand(command, 3);
+}
+
+/**
+ * @brief
+ * 		Set configuration settings for unixtime flash memory persistence
+ * @param when
+ * 		Specifies when the time is to be saved:
+ * 		1(001) : now
+ * 		2(010) : on update
+ * 		4(100) : periodically
+ * @attention
+ * 		The description implies the bools cannot be true at the same time.
+ * (Table 51)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_UnixTime_save_config(uint8_t when, uint8_t period) {
+  uint8_t command[3];
+  command[0] = SET_UNIX_TIME_SAVE_ID;
+  command[1] = when;
+  command[2] = period;  // [s]
+  return adcs_telecommand(command, 3);
+}
+
+/**
+ * @brief
+ * 		Set File Upload Hole Map
+ * @param num
+ * 		The hole map number: 1-8
+ * @param hole_map
+ * 		An array of 16 bytes
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_hole_map(uint8_t* hole_map, uint8_t num) {
+  uint8_t command[17];
+  command[0] = SET_HOLE_MAP_ID + num;
+  memcpy(&command[1], &hole_map, 16);
+  return adcs_telecommand(command, 17);
+}
+
+/**
+ * @brief
+ * 		Set current Unix Time
+ * @param unix_t
+ * 		Time since 01/01/1970, 00:00. [s]
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_set_unix_t(uint32_t unix_t, uint16_t count_ms) {
+  uint8_t command[7];
+  command[0] = SET_CURRENT_UNIX_TIME;
+  memcpy(&command[1], &unix_t, 4);
+  memcpy(&command[5], &count_ms, 2);  // [ms]
+  return adcs_telecommand(command, 7);
+}
+
+/**
+ * @brief
+ * 		Get cache enabled state
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_cache_en_state(bool* en_state) {
+  uint8_t telemetry[1];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_CACHE_EN_STATE_ID, telemetry, 1);
+  *en_state = telemetry[0] & 1;
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get SRAM scrubbing size
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_sram_scrub_size(uint16_t* size) {
+  uint8_t telemetry[2];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_SRAM_SCRUB_PARAM_ID, telemetry, 2);
+  *size = (telemetry[1] >> 8) | telemetry[0];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get configuration settings for unixtime flash memory persistence
+ * @param when
+ * 		Specifies when the time is to be saved:
+ * 		1(001) : now
+ * 		2(010) : on update
+ * 		4(100) : periodically
+ * @attention
+ * 		The description implies the bools cannot be true at the same time.
+ * (Table 51)
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_UnixTime_save_config(uint8_t* when, uint8_t* period) {
+  uint8_t telemetry[2];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_UNIX_TIME_SAVE_ID, telemetry, 2);
+  *when = telemetry[0];
+  *period = telemetry[1];
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get File Upload Hole Map
+ * @param num
+ * 		The hole map number: 1-8
+ * @param hole_map
+ * 		An array of 16 bytes
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_hole_map(uint8_t* hole_map, uint8_t num) {
+  uint8_t telemetry[16];
+  ADCS_returnState state;
+  uint8_t TM_ID = GET_HOLE_MAP_ID + num;
+  state = adcs_telemetry(TM_ID, telemetry, 16);
+  memcpy(&hole_map, &telemetry[0], 16);
+  return state;
+}
+
+/**
+ * @brief
+ * 		Get current Unix Time
+ * @param unix_t
+ * 		Time since 01/01/1970, 00:00. [s]
+ * @return
+ * 		Success of function defined in adcs_types.h
+ */
+ADCS_returnState ADCS_get_unix_t(uint32_t* unix_t, uint16_t* count_ms) {
+  uint8_t telemetry[6];
+  ADCS_returnState state;
+  state = adcs_telemetry(GET_CURRENT_UNIX_TIME, telemetry, 6);
+  memcpy(&unix_t, &telemetry[0], 4);
+  memcpy(&count_ms, &telemetry[4], 2);  // [ms]
+  return state;
 }
 
 /*************************** BootLoader TCs ***************************/
