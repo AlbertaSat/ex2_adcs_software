@@ -439,18 +439,17 @@ ADCS_returnState ADCS_reset_log_pointer(void);
 ADCS_returnState ADCS_advance_log_pointer(void);
 ADCS_returnState ADCS_reset_boot_registers(void);
 ADCS_returnState ADCS_format_sd_card(void);
-ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter,
+ADCS_returnState ADCS_erase_file(uint8_t file_type, uint8_t file_counter,
                                  bool erase_all);
-ADCS_returnState ADCS_load_file_download_block(File_Type file_type,
+ADCS_returnState ADCS_load_file_download_block(uint8_t file_type,
                                                uint8_t counter, uint32_t offset,
                                                uint16_t block_length);
 ADCS_returnState ADCS_advance_file_list_read_pointer(void);
-ADCS_returnState ADCS_initiate_file_upload(File_Upload_Dest file_dest,
+ADCS_returnState ADCS_initiate_file_upload(uint8_t file_dest,
                                            uint8_t block_size);
 ADCS_returnState ADCS_file_upload_packet(uint16_t packet_number,
                                          char* file_bytes);
-ADCS_returnState ADCS_finalize_upload_block(File_Upload_Dest file_dest,
-                                            uint32_t offset,
+ADCS_returnState ADCS_finalize_upload_block(uint8_t file_dest, uint32_t offset,
                                             uint16_t block_length);
 ADCS_returnState ADCS_reset_upload_block(void);
 ADCS_returnState ADCS_reset_file_list_read_pointer(void);

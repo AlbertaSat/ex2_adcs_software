@@ -54,10 +54,6 @@ void test_ADCS_common_commands(void) {
                         ADCS_file_upload_packet(145, "This is test file"));
 }
 
-void test_ADCS_common_telemetry(void) {
-  TEST_IGNORE_MESSAGE("Need to Implement ADCS_CommonTelemetry");
-}
-
 void test_ADCS_BootLoader_telecommands(void) {
   // Same for all uart TC replies
   uint8_t reply[6];
@@ -512,4 +508,22 @@ void test_get_3x3(void) {
   get_3x3(&config.MTM1.sensitivity_mat[0], &frame[0], 1);
   TEST_ASSERT_FLOAT_WITHIN(0.1, config.MTM1.sensitivity_mat[0], mat[0]);
   TEST_ASSERT_FLOAT_WITHIN(0.1, config.MTM1.sensitivity_mat[5], mat[5]);
+}
+
+void test_ADCS_Common_configMsgs(void) {
+  uint8_t reply[16];
+  reply[0] = ADCS_ESC_CHAR;
+  reply[1] = ADCS_SOM;
+  reply[2] = SET_HOLE_MAP_ID + 4;
+  reply[3] = ADCS_OK;
+  reply[4] = ADCS_ESC_CHAR;
+  reply[5] = ADCS_EOM;
+
+  // Set Hole map
+  uint8_t hole_map[16];
+  hole_map[8] = 17;
+  uart_send_Ignore();
+  uart_receive_ExpectAnyArgs();
+  uart_receive_ReturnArrayThruPtr_data(reply, 6);
+  TEST_ASSERT_EQUAL_UINT(ADCS_OK, ADCS_set_hole_map(hole_map, 4));
 }

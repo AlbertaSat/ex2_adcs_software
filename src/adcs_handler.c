@@ -72,7 +72,8 @@ ADCS_returnState adcs_telemetry(uint8_t TM_ID, uint8_t* reply,
 /**
  * @brief
  * 		append two bytes of a int16_t
- * @param b1 LSB, b2 MSB
+ * @param b1 LSB
+ * @param b2 MSB
  * @return
  * 		the appended int16_t
  */
@@ -108,7 +109,8 @@ int32_t uint82int32(uint8_t* address) {
 /**
  * @brief
  * 		append two bytes of a uint16_t to a float
- * @param b1 LSB, b2 MSB
+ * @param b1 LSB
+ * @param b2 MSB
  * @return
  * 		the appended float
  */
@@ -237,16 +239,19 @@ ADCS_returnState ADCS_format_sd_card(void) {
 /**
  * @brief
  * 		Erase file
- * @param file_type 	//* Not sure if a new type is necessary
- * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG = 2,
- * FILE_TYPE_JPG_IMAGE = 3, FILE_TYPE_BMP_IMAGE = 4, FILE_TYPE_INDEX = 15
+ * @param file_type
+ * 		Accepted parameters (Table 16):
+ * 		telemetry log = 2
+ * 		JPG image = 3
+ * 		BMP image = 4
+ * 		index = 15
  * @param file_counter
  * @param erase_all
  * 		if erase all
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter,
+ADCS_returnState ADCS_erase_file(uint8_t file_type, uint8_t file_counter,
                                  bool erase_all) {
   uint8_t command[4];
   command[0] = ERASE_FILE_ID;
@@ -260,15 +265,18 @@ ADCS_returnState ADCS_erase_file(File_Type file_type, uint8_t file_counter,
  * @brief
  * 		Fill download with file contents
  * @param file_type
- * 		Accepted parameters: FILE_TYPE_TELEMETERY_LOG = 2,
- * FILE_TYPE_JPG_IMAGE = 3, FILE_TYPE_BMP_IMAGE = 4, FILE_TYPE_INDEX = 15
+ * 		Accepted parameters (Table 16):
+ * 		telemetry log = 2
+ * 		JPG image = 3
+ * 		BMP image = 4
+ * 		index = 15
  * @param counter
  * @param offset
  * @param block_length
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_load_file_download_block(File_Type file_type,
+ADCS_returnState ADCS_load_file_download_block(uint8_t file_type,
                                                uint8_t counter, uint32_t offset,
                                                uint16_t block_length) {
   uint8_t command[9];
@@ -299,13 +307,15 @@ ADCS_returnState ADCS_advance_file_list_read_pointer(void) {
  * @brief
  * 		Initiate File Upload
  * @param file_dest
- * 		Accepted parameters: EEPROM = 2, FLASH_PROGRAM_1 -
- * FLASH_PROGRAM_7 = 3-10, SD_USER_FILE_1 - SD_USER_FILE_8 = 11-17
+ * 		Accepted parameters (Table 20):
+ * 		EEPROM = 2
+ * 		FLASH_PROGRAM_1 - FLASH_PROGRAM_7 = 3-10
+ * 		SD_USER_FILE_1 - SD_USER_FILE_8 = 11-17
  * @param block_size
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_initiate_file_upload(File_Upload_Dest file_dest,
+ADCS_returnState ADCS_initiate_file_upload(uint8_t file_dest,
                                            uint8_t block_size) {
   uint8_t command[3];
   command[0] = INITIATE_FILE_UPLOAD_ID;
@@ -348,8 +358,7 @@ ADCS_returnState ADCS_file_upload_packet(uint16_t packet_number,
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_finalize_upload_block(File_Upload_Dest file_dest,
-                                            uint32_t offset,
+ADCS_returnState ADCS_finalize_upload_block(uint8_t file_dest, uint32_t offset,
                                             uint16_t block_length) {
   uint8_t command[8];
   command[0] = FINALIZE_UPLOAD_BLOCK_ID;
@@ -437,8 +446,8 @@ ADCS_returnState ADCS_get_node_identification(
  * @param boot_cause
  * 		Possible values: 1,2. Refer to Table 31
  * @attention
- * 		The firmware version is not included since it can be requested in
- * the previous function
+ * 		The firmware version is not included since it can be requested
+ * in the previous function
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -477,8 +486,8 @@ ADCS_returnState ADCS_get_boot_index(uint8_t* program_idx, uint8_t* boot_stat) {
 
 /**
  * @brief
- * 		Get Last Logged Event (relative to pointer - adjusted via Advance
- * and Reset TCs (3 & 4)
+ * 		Get Last Logged Event (relative to pointer - adjusted via
+ * Advance and Reset TCs (3 & 4)
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -553,8 +562,8 @@ ADCS_returnState ADCS_get_file_download_buffer(uint16_t* packet_count,
  * @brief
  * 		Status about download block preparation
  * @param param_err
- * 		The combination of message length and hole map resulted in invalid
- * array lengths
+ * 		The combination of message length and hole map resulted in
+ * invalid array lengths
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -608,7 +617,7 @@ ADCS_returnState ADCS_get_init_upload_stat(bool* busy) {
   uint8_t telemetry[1];
   ADCS_returnState state;
   state = adcs_telemetry(INIT_UPLOAD_STAT_ID, telemetry, 1);
-  *busy = telemetry[0] & 0x1;
+  *busy = telemetry[0] & 1;
   return state;
 }
 
@@ -740,8 +749,8 @@ ADCS_returnState ADCS_set_sram_scrub_size(uint16_t size) {
  * 		2(010) : on update
  * 		4(100) : periodically
  * @attention
- * 		The description implies the bools cannot be true at the same time.
- * (Table 51)
+ * 		The description implies the bools cannot be true at the same
+ * time. (Table 51)
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -766,8 +775,8 @@ ADCS_returnState ADCS_set_UnixTime_save_config(uint8_t when, uint8_t period) {
 ADCS_returnState ADCS_set_hole_map(uint8_t* hole_map, uint8_t num) {
   uint8_t command[17];
   command[0] = SET_HOLE_MAP_ID + num;
-  memcpy(&command[1], &hole_map, 16);
-  return adcs_telecommand(command, 17);
+  memcpy(&command[1], hole_map, 16);
+  return adcs_telecommand(command, 17);  //* + command[9]. Tested
 }
 
 /**
@@ -823,8 +832,8 @@ ADCS_returnState ADCS_get_sram_scrub_size(uint16_t* size) {
  * 		2(010) : on update
  * 		4(100) : periodically
  * @attention
- * 		The description implies the bools cannot be true at the same time.
- * (Table 51)
+ * 		The description implies the bools cannot be true at the same
+ * time. (Table 51)
  * @return
  * 		Success of function defined in adcs_types.h
  */
