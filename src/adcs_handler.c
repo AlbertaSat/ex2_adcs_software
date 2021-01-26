@@ -157,20 +157,27 @@ void get_xyz16(xyz16* measurement, uint8_t* address) {
 
 /**
  * @brief
- * 		a supplementary function for adcs_get_full_config
+ * 		A supplementary function for ADCS_get_full_config
  * @detail
  * 		Converts the correct value from telemetry bytes with the
  * coefficient factor
  * @param matrix
- * 		a 3*3 matrix
+ * 		A 3*3 matrix
  * @param address
  * 		the position in the telemetry frame where the data is located
  * @param coef
  * 		formatted value = rawval * coef;
  */
 void get_3x3(float* matrix, uint8_t* address, float coef) {
-  for (int i = 0; i < 9; i++) {
-    matrix[i] = coef * uint82int16(*(address + 2 * i), *(address + 2 * i + 1));
+  for (int i = 0; i < 3; i++) {
+    matrix[4 * i] =
+        coef * uint82int16(*(address + 2 * i), *(address + 2 * i + 1));
+  }
+  for (int i = 0; i < 3; i++) {
+    matrix[1 + i] = coef * uint82int16(*(address + 2 * (i + 3)),
+                                       *(address + 2 * (i + 1) + 1));
+    matrix[5 + i] = coef * uint82int16(*(address + 2 * (i + 6)),
+                                       *(address + 2 * (i + 5) + 1));
   }
 }
 
@@ -190,7 +197,7 @@ ADCS_returnState ADCS_reset(void) {
 
 /**
  * @brief
- * 		Reset pointer to log buffer (from where LastLogEvent TLM is
+ * 		Resets pointer to log buffer (from where LastLogEvent TLM is
  returned)
  * @return
  * 		Success of function defined in adcs_types.h
@@ -214,7 +221,7 @@ ADCS_returnState ADCS_advance_log_pointer(void) {
 
 /**
  * @brief
- * 		Reset Boot Registers
+ * 		Resets Boot Registers
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -225,7 +232,7 @@ ADCS_returnState ADCS_reset_boot_registers(void) {
 
 /**
  * @brief
- * 		Format SD Card
+ * 		Formats SD Card
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -238,7 +245,7 @@ ADCS_returnState ADCS_format_sd_card(void) {
 
 /**
  * @brief
- * 		Erase file
+ * 		Erases file
  * @param file_type
  * 		Accepted parameters (Table 16):
  * 		telemetry log = 2
@@ -263,7 +270,7 @@ ADCS_returnState ADCS_erase_file(uint8_t file_type, uint8_t file_counter,
 
 /**
  * @brief
- * 		Fill download with file contents
+ * 		Fills download with file contents
  * @param file_type
  * 		Accepted parameters (Table 16):
  * 		telemetry log = 2
@@ -305,7 +312,7 @@ ADCS_returnState ADCS_advance_file_list_read_pointer(void) {
 
 /**
  * @brief
- * 		Initiate File Upload
+ * 		Initiates File Upload
  * @param file_dest
  * 		Accepted parameters (Table 20):
  * 		EEPROM = 2
@@ -348,7 +355,7 @@ ADCS_returnState ADCS_file_upload_packet(uint16_t packet_number,
 
 /**
  * @brief
- * 		Finalize Uploaded File Block
+ * 		Finalizes Uploaded File Block
  * @param file_dest
  * 		File Destination
  * @param offset
@@ -371,7 +378,7 @@ ADCS_returnState ADCS_finalize_upload_block(uint8_t file_dest, uint32_t offset,
 
 /**
  * @brief
- * 		Reset HoleMap for Upload Block
+ * 		Resets HoleMap for Upload Block
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -382,7 +389,7 @@ ADCS_returnState ADCS_reset_upload_block(void) {
 
 /**
  * @brief
- * 		Reset File List Read Pointer
+ * 		Resets File List Read Pointer
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -393,7 +400,7 @@ ADCS_returnState ADCS_reset_file_list_read_pointer(void) {
 
 /**
  * @brief
- * 		Initiate Download Burst
+ * 		Initiates Download Burst
  * @param msg_length
  * 		Message Length
  * @param ignore_hole_map
@@ -413,7 +420,7 @@ ADCS_returnState ADCS_initiate_download_burst(uint8_t msg_length,
 /*************************** Common TMs ***************************/
 /**
  * @brief
- * 		Get identification information for this node
+ * 		Gets identification information for the node. Refer to table 27.
  * @param interface_ver
  * 		Should have a value of 1
  * @param time_s
@@ -438,7 +445,7 @@ ADCS_returnState ADCS_get_node_identification(
 
 /**
  * @brief
- * 		Get Boot And Running Program Status
+ * 		Gets Boot And Running Program Status. Refer to table 28.
  * @param mcu_reset_cause
  * 		Possible values: 0-15. Refer to Table 29
  * @param boot_cause
@@ -467,7 +474,8 @@ ADCS_returnState ADCS_get_boot_program_stat(uint8_t* mcu_reset_cause,
 
 /**
  * @brief
- * 		Get current selected boot index and status of last boot
+ * 		Gets current selected boot index and status of last boot. Refer
+ * to table 32.
  * @param program_idx
  * 		Possible values: 1,2. Refer to Table 31
  * @param boot_stat
@@ -487,7 +495,7 @@ ADCS_returnState ADCS_get_boot_index(uint8_t* program_idx, uint8_t* boot_stat) {
 /**
  * @brief
  * 		Get Last Logged Event (relative to pointer - adjusted via
- * Advance and Reset TCs (3 & 4)
+ * Advance and Reset TCs (3 & 4). Refer to table 34.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -505,7 +513,7 @@ ADCS_returnState ADCS_get_last_logged_event(uint32_t* time, uint8_t* event_id,
 
 /**
  * @brief
- * 		Get SD card format or erase progress
+ * 		Gets SD card format or erase progress. Refer to table 38.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -521,7 +529,8 @@ ADCS_returnState ADCS_get_SD_format_progress(bool* format_busy,
 
 /**
  * @brief
- * 		Get the acknowledge status of the previously sent command
+ * 		Gets the acknowledge status of the previously sent command.
+ * Refer to table 39.
  * @param tc_err_stat
  * 		Status of last processed TC. Possible values in Table 40
  * @return
@@ -542,7 +551,7 @@ ADCS_returnState ADCS_get_TC_ack(uint8_t* last_tc_id, bool* tc_processed,
 
 /**
  * @brief
- * 		File Download buffer 20-byte packet
+ * 		Gets file download buffer 20-byte packet.
  * @param file
  * 		A 20-byte file
  * @return
@@ -560,7 +569,8 @@ ADCS_returnState ADCS_get_file_download_buffer(uint16_t* packet_count,
 
 /**
  * @brief
- * 		Status about download block preparation
+ * 		Gets the status about download block preparation. Refer to
+ * table 42.
  * @param param_err
  * 		The combination of message length and hole map resulted in
  * invalid array lengths
@@ -582,7 +592,7 @@ ADCS_returnState ADCS_get_file_download_block_stat(bool* ready, bool* param_err,
 
 /**
  * @brief
- * 		Get file information
+ * 		Gets the file information. Refer to table 43.
  * @param type
  * 		File_type. Possible values: 2,3,4,15. Refer to table 16
  * @param time
@@ -609,7 +619,7 @@ ADCS_returnState ADCS_get_file_info(uint8_t* type, bool* updating,
 
 /**
  * @brief
- * 		Initialize Upload status
+ * 		Gets the upload initialization status.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -623,7 +633,7 @@ ADCS_returnState ADCS_get_init_upload_stat(bool* busy) {
 
 /**
  * @brief
- * 		Get block finalization status
+ * 		Gets the block finalization status.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -638,7 +648,7 @@ ADCS_returnState ADCS_get_finalize_upload_stat(bool* busy, bool* err) {
 
 /**
  * @brief
- * 		Get file upload Block CRC16 Checksum
+ * 		Gets the file upload Block CRC16 Checksum.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -652,9 +662,7 @@ ADCS_returnState ADCS_get_upload_crc16_checksum(uint16_t* checksum) {
 
 /**
  * @brief
- * 		Get SRAM Latchup counters
- * @details
- * 		Refer to table 35
+ * 		Gets the number of SRAM Latchups. Refer to table 35.
  * @attention
  * 		The size of TM is more than requested data
  * @return
@@ -671,7 +679,7 @@ ADCS_returnState ADCS_get_SRAM_latchup_count(uint16_t* sram1, uint16_t* sram2) {
 
 /**
  * @brief
- * 		Get EDAC Error Counters
+ * 		Gets the number of EDAC errors.
  * @details
  * 		Refer to table 36
  * @return
@@ -691,8 +699,8 @@ ADCS_returnState ADCS_get_EDAC_err_count(uint16_t* single_sram,
 
 /**
  * @brief
- * 		Get communication status - includes TC and TM counters and error
- * flags
+ * 		Gets the communication status - includes TC and TM counters and
+ * error. flags
  * @param flags_arr
  * 		An array of flags. Refer to table 37
  * @attention
@@ -716,7 +724,7 @@ ADCS_returnState ADCS_get_comms_stat(uint16_t* TC_num, uint16_t* TM_num,
 /************************* Common Config Msgs *************************/
 /**
  * @brief
- * 		Set cache enabled state
+ * 		Sets the cache enabled state.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -729,7 +737,7 @@ ADCS_returnState ADCS_set_cache_en_state(bool en_state) {
 
 /**
  * @brief
- * 		Set SRAM scrubbing size
+ * 		Sets the SRAM scrubbing size.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -742,7 +750,8 @@ ADCS_returnState ADCS_set_sram_scrub_size(uint16_t size) {
 
 /**
  * @brief
- * 		Set configuration settings for unixtime flash memory persistence
+ * 		Sets configuration settings for Unix time flash memory
+ * persistence.
  * @param when
  * 		Specifies when the time is to be saved:
  * 		1(001) : now
@@ -764,7 +773,7 @@ ADCS_returnState ADCS_set_UnixTime_save_config(uint8_t when, uint8_t period) {
 
 /**
  * @brief
- * 		Set File Upload Hole Map
+ * 		Sets File Upload Hole Map.
  * @param num
  * 		The hole map number: 1-8
  * @param hole_map
@@ -781,7 +790,7 @@ ADCS_returnState ADCS_set_hole_map(uint8_t* hole_map, uint8_t num) {
 
 /**
  * @brief
- * 		Set current Unix Time
+ * 		Sets the current Unix Time.
  * @param unix_t
  * 		Time since 01/01/1970, 00:00. [s]
  * @return
@@ -797,7 +806,7 @@ ADCS_returnState ADCS_set_unix_t(uint32_t unix_t, uint16_t count_ms) {
 
 /**
  * @brief
- * 		Get cache enabled state
+ * 		Gets the cache enabled state.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -811,7 +820,7 @@ ADCS_returnState ADCS_get_cache_en_state(bool* en_state) {
 
 /**
  * @brief
- * 		Get SRAM scrubbing size
+ * 		Gets the SRAM scrubbing size.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -825,7 +834,8 @@ ADCS_returnState ADCS_get_sram_scrub_size(uint16_t* size) {
 
 /**
  * @brief
- * 		Get configuration settings for unixtime flash memory persistence
+ * 		Gets configuration settings for unix time flash memory
+ * persistence.
  * @param when
  * 		Specifies when the time is to be saved:
  * 		1(001) : now
@@ -848,7 +858,7 @@ ADCS_returnState ADCS_get_UnixTime_save_config(uint8_t* when, uint8_t* period) {
 
 /**
  * @brief
- * 		Get File Upload Hole Map
+ * 		Gets File Upload Hole Map.
  * @param num
  * 		The hole map number: 1-8
  * @param hole_map
@@ -867,7 +877,7 @@ ADCS_returnState ADCS_get_hole_map(uint8_t* hole_map, uint8_t num) {
 
 /**
  * @brief
- * 		Get current Unix Time
+ * 		Gets the current Unix Time.
  * @param unix_t
  * 		Time since 01/01/1970, 00:00. [s]
  * @return
@@ -885,7 +895,7 @@ ADCS_returnState ADCS_get_unix_t(uint32_t* unix_t, uint16_t* count_ms) {
 /*************************** BootLoader TCs ***************************/
 /**
  * @brief
- * 		Clear error flags
+ * 		Clears the error flags.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -896,7 +906,7 @@ ADCS_returnState ADCS_clear_err_flags(void) {
 
 /**
  * @brief
- * 		Set boot index
+ * 		Sets the boot index.
  * @param index
  * 		one valid value: 1 = internal flash program
  * @return
@@ -915,7 +925,7 @@ ADCS_returnState ADCS_set_boot_index(uint8_t index) {
 
 /**
  * @brief
- * 		Run the selected program
+ * 		Runs the selected program.
  * @attention
  * 		could be merged with the previous one in services
  * @return
@@ -928,7 +938,7 @@ ADCS_returnState ADCS_run_selected_program(void) {
 
 /**
  * @brief
- * 		Read the program information
+ * 		Reads the program information.
  * @param index
  * 		Table 66 - Program index
  * 		0 : BootLoader, 1 : Internal flash program, 2 : EEPROM,
@@ -950,7 +960,7 @@ ADCS_returnState ADCS_read_program_info(uint8_t index) {
 
 /**
  * @brief
- * 		Copy program to internal flash
+ * 		Copies the program to internal flash.
  * @param index
  * 		Table 66 - Source Program index
  * 		0 : BootLoader, 1 : Internal flash program, 2 : EEPROM,
@@ -978,7 +988,7 @@ ADCS_returnState ADCS_copy_program_internal_flash(uint8_t index,
 
 /**
  * @brief
- * 		Get BootLoader state
+ * 		Gets the BootLoader state.
  * @param uptime
  * @param flags_arr
  * 		11 boolean flags from Table 69
@@ -1004,7 +1014,7 @@ ADCS_returnState ADCS_get_bootloader_state(uint16_t* uptime,
 
 /**
  * @brief
- * 		Get program information
+ * 		Gets the program information. Refer to table 70.
  * @param index
  * 		Table 66 - Source Program index
  * @param busy
@@ -1031,7 +1041,7 @@ ADCS_returnState ADCS_get_program_info(uint8_t* index, bool* busy,
 
 /**
  * @brief
- * 		Progress of copy to internal flash operation
+ * 		Gets the progress of copy to internal flash operation
  * @param busy
  * 		busy copying
  * @param err
@@ -1051,7 +1061,7 @@ ADCS_returnState ADCS_copy_internal_flash_progress(bool* busy, bool* err) {
 /*************************** ACP TCs ***************************/
 /**
  * @brief
- * 		Deploy magnetometer boom (deployment actuation timeout value)
+ * 		Deploy MTM boom (sets the deployment actuation timeout value).
  * @param actuation_timeout
  * 		in seconds
  * @attention
@@ -1068,7 +1078,7 @@ ADCS_returnState ADCS_deploy_magnetometer_boom(uint8_t actuation_timeout) {
 
 /**
  * @brief
- * 		Set enabled state and control loop behavior
+ * 		Sets the enabled state and control loop behavior
  * @param state : ADCS loop state
  * 		0 : inactive
  * 		1 : 1Hz loop active
@@ -1086,7 +1096,7 @@ ADCS_returnState ADCS_set_enabled_state(uint8_t state) {
 
 /**
  * @brief
- * 		Clear latched error flags
+ * 		Clears latched error flags.
  * @param adcs_flag: ADCS error flags
  * @param hk_flag: Housekeeping error flags
  * @return
@@ -1103,7 +1113,7 @@ ADCS_returnState ADCS_clear_latched_errs(bool adcs_flag, bool hk_flag) {
 
 /**
  * @brief
- * 		Set attitude control mode
+ * 		Sets the attitude control mode.
  * @param ctrl_mode: 0-15: Refer to Table 78 in the manual
  * @param timeout: control timeout duration in seconds (0XFFFF: infinity)
  * @return
@@ -1121,7 +1131,7 @@ ADCS_returnState ADCS_set_attitude_ctrl_mode(uint8_t ctrl_mode,
 
 /**
  * @brief
- * 		Set attitude estimation mode
+ * 		Sets the attitude estimation mode.
  * @param mode: 0-7 : Refer to Table 80 in the manual
  * @return
  * 		Success of function defined in adcs_types.h
@@ -1135,7 +1145,7 @@ ADCS_returnState ADCS_set_attitude_estimate_mode(uint8_t mode) {
 
 /**
  * @brief
- * 		Trigger ADCS loop
+ * 		Triggers the ADCS loop.
  * 	@attention
  * 		ADCS_set_enabled_state(2) must have been called in order for
  * this to operate
@@ -1149,7 +1159,7 @@ ADCS_returnState ADCS_trigger_adcs_loop(void) {
 
 /**
  * @brief
- * 		Trigger ADCS loop with simulated sensor data
+ * 		Triggers the ADCS loop with simulated sensor data.
  * 	@parameter sim_data
  * 		127 bytes of data. Refer to table 84
  * 	@attention
@@ -1158,18 +1168,24 @@ ADCS_returnState ADCS_trigger_adcs_loop(void) {
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_trigger_adcs_loop_sim(
-    uint8_t* sim_data) {  //* Doesn't make sense to implement by individual
-                          // parameters.
+ADCS_returnState ADCS_trigger_adcs_loop_sim(sim_sensor_data sim_data) {
   uint8_t command[128];
   command[0] = TRIGGER_ADCS_LOOP_SIM_ID;
-  memcpy(&command[1], sim_data, 127);
+  memcpy(&command[1], &sim_data, 121);
+  command[122] = sim_data.pos_std_dev.x * 10;
+  command[123] = sim_data.pos_std_dev.y * 10;
+  command[124] = sim_data.pos_std_dev.z * 10;
+  memcpy(&command[124], &sim_data.vel_std_dev, 3);
   return adcs_telecommand(command, 128);
+  /* test cases:
+   + command[16] >> 8 | command[15]
+   + command[123]
+   */
 }
 
 /**
  * @brief
- * 		Set ASGP4 run mode
+ * 		Sets the ASGP4 run mode.
  * @param mode (Table 87)
  * 		0 : off
  * 		1 : waiting for trigger
@@ -1187,7 +1203,7 @@ ADCS_returnState ADCS_set_ASGP4_rune_mode(uint8_t mode) {
 
 /**
  * @brief
- * 		Trigger a start of the ASGP4 process
+ * 		Triggers start of the ASGP4 process.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -1198,7 +1214,7 @@ ADCS_returnState ADCS_trigger_ASGP4(void) {
 
 /**
  * @brief
- * 		Set magnetometer operation mode and which is used
+ * 		Sets the MTM operation mode.
  * @param mode (Table 90)
  * 		0 : Main MTM through signal
  * 		1 : Redundant MTM through signal
@@ -1216,7 +1232,7 @@ ADCS_returnState ADCS_set_MTM_op_mode(uint8_t mode) {
 
 /**
  * @brief
- * 		Convert raw or bmp files to JPG file
+ * 		Converts raw or bmp files to JPG file.
  * @param source
  * 		source file counter
  * @param QF
@@ -1237,7 +1253,7 @@ ADCS_returnState ADCS_cnv2jpg(uint8_t source, uint8_t QF,
 
 /**
  * @brief
- * 		Save image from one of cameras to SD
+ * 		Saves image from one of the cameras to SD.
  * @param camera
  * 		Camera selection:
  * 		0 : CubeSense Cam1
@@ -1262,33 +1278,27 @@ ADCS_returnState ADCS_save_img(uint8_t camera, uint8_t img_size) {
 
 /**
  * @brief
- * 		Set magnetorquer output
+ * 		Sets MTQ output.
  * @attention
  * 		ADCS_set_attitude_ctrl_mode(0, ) must be called. (Control mode
  * None)
  * @attention
- * 		If using the raw value, perform /1000 and note that the value
- * must be <2^15
+ * 		If using the raw value, perform /1000.
  * @param x,y,z
  * 		Commanded x,y,z-torquer duty cycle
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_set_magnetorquer_output(int16_t x, int16_t y, int16_t z) {
+ADCS_returnState ADCS_set_magnetorquer_output(xyz16 duty_cycle) {
   uint8_t command[7];
   command[0] = SET_MAGNETORQUER_OUTPUT_ID;
-  command[1] = x & 0xFF;
-  command[2] = x >> 8;
-  command[3] = y & 0xFF;
-  command[4] = y >> 8;
-  command[5] = z & 0xFF;
-  command[6] = z >> 8;
+  memcpy(&command[1], &duty_cycle, 6);
   return adcs_telecommand(command, 7);  //* + (256*command[6] + command[5])
 }
 
 /**
  * @brief
- * 		Set wheel speed
+ * 		Sets the wheel speed.
  * @attention
  * 		ADCS_set_attitude_ctrl_mode(0, ) must be called. (Control mode
  * None)
@@ -1297,21 +1307,16 @@ ADCS_returnState ADCS_set_magnetorquer_output(int16_t x, int16_t y, int16_t z) {
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_set_wheel_speed(int16_t x, int16_t y, int16_t z) {
+ADCS_returnState ADCS_set_wheel_speed(xyz16 speed) {
   uint8_t command[7];
   command[0] = SET_WHEEL_SPEED_ID;
-  command[1] = x & 0xFF;
-  command[2] = x >> 8;
-  command[3] = y & 0xFF;
-  command[4] = y >> 8;
-  command[5] = z & 0xFF;
-  command[6] = z >> 8;
+  memcpy(&command[1], &speed, 6);
   return adcs_telecommand(command, 7);
 }
 
 /**
  * @brief
- * 		Save current configuration to flash memory
+ * 		Saves the current configuration to flash memory.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -1322,7 +1327,7 @@ ADCS_returnState ADCS_save_config(void) {
 
 /**
  * @brief
- * 		Save current orbit parameters to flash memory
+ * 		Saves the current orbit parameters to flash memory.
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -1335,7 +1340,7 @@ ADCS_returnState ADCS_save_orbit_params(void) {
 /************************* ADCS State **************************/
 /**
  * @brief
- * 		Get ADCS current state
+ * 		Gets ADCS current full state.
  * @param data
  * 		A struct of floats defined in adcs_handler.h
  * 		Refer to table 149
@@ -1385,7 +1390,7 @@ ADCS_returnState ADCS_get_current_state(adcs_state* data) {
 /************************* General **************************/
 /**
  * @brief
- * 		JPG conversion progress
+ * 		Gets JPG conversion progress.
  * @param percentage
  * 		progress in percentage
  * @param result
@@ -1412,7 +1417,7 @@ ADCS_returnState ADCS_get_jpg_cnv_progress(uint8_t* percentage, uint8_t* result,
 
 /**
  * @brief
- * 		Get flags regarding CubeACP state
+ * 		Gets flags regarding CubeACP state.
  * @param flags_arr
  * 		6 boolean flags from Table 101
  * @return
@@ -1430,7 +1435,7 @@ ADCS_returnState ADCS_get_cubeACP_state(uint8_t* flags_arr) {
 
 /**
  * @brief
- * 		Get execution times of ACP functions
+ * 		Gets the execution times of ACP functions.
  * @param adcs_update
  * 		time to perform complete adcs update [ms]
  * @param sensor_comms
@@ -1458,12 +1463,12 @@ ADCS_returnState ADCS_get_execution_times(uint16_t* adcs_update,
 
 /**
  * @brief
- * 		Returns information about the ACP loop
+ * 		Returns the information about the ACP loop.
  * @param time
  * 		 Time since the start of the current loop iteration [ms]
  * @param execution_point
  * 		Indicates which part of the loop is currently executing
- * 		12 possible values. Refer to Table 168
+ * 		13 possible values. Refer to Table 168
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -1479,7 +1484,7 @@ ADCS_returnState ADCS_get_ACP_loop_stat(uint16_t* time,
 
 /**
  * @brief
- * 		Status of Image Capture and Save Operation
+ * 		Gets the status of Image Capture and Save Operation.
  * @param percentage
  * 		progress in percentage
  * @param status
@@ -1506,7 +1511,7 @@ ADCS_returnState ADCS_get_img_save_progress(uint8_t* percentage,
 
 /**
  * @brief
- * 		Get Calibrated sensor measurements
+ * 		Gets the calibrated sensor measurements.
  * @param measurements
  * 		A struct of floats defined in adcs_handler.h
  * 		Refer to table 150
@@ -1535,7 +1540,7 @@ ADCS_returnState ADCS_get_measurements(adcs_measures* measurements) {
 /*********************** ADCS Actuator ************************/
 /**
  * @brief
- * 		Get actuator commands
+ * 		Gets the actuator commands.
  * @param measurements
  * 		A struct of floats defined in adcs_handler.h
  * 		Refer to table 151
@@ -1554,7 +1559,7 @@ ADCS_returnState ADCS_get_actuator(adcs_actuator* commands) {
 /*********************** ADCS Estimation ************************/
 /**
  * @brief
- * 		Get the esimation meta-data
+ * 		Gets the estimation meta-data.
  * @param data
  * 		A struct of floats defined in adcs_handler.h
  * 		Refer to table 152
@@ -1564,7 +1569,7 @@ ADCS_returnState ADCS_get_actuator(adcs_actuator* commands) {
 ADCS_returnState ADCS_get_estimation(adcs_estimate* data) {
   uint8_t telemetry[42];
   ADCS_returnState state;
-  state = adcs_telemetry(ESTIMATION_ID, telemetry, 12);
+  state = adcs_telemetry(ESTIMATION_ID, telemetry, 42);
   get_xyz(&data->igrf_magnetic_field, &telemetry[0], 0.01);  // [uT]
   get_xyz(&data->sun, &telemetry[6], 0.0001);
   get_xyz(&data->gyro_bias, &telemetry[12], 0.001);  // [deg/s]
@@ -1577,7 +1582,7 @@ ADCS_returnState ADCS_get_estimation(adcs_estimate* data) {
 
 /**
  * @brief
- * 		Get ASGP4 TLEs
+ * 		Gets the ASGP4 TLEs.
  * @param complete
  * 		ASGP4 process complete
  * @param err
@@ -1596,7 +1601,7 @@ ADCS_returnState ADCS_get_ASGP4(bool* complete, uint8_t* err,
                                 adcs_asgp4* asgp4) {
   uint8_t telemetry[33];
   ADCS_returnState state;
-  state = adcs_telemetry(ASGP4_TLEs_ID, telemetry, 2);
+  state = adcs_telemetry(ASGP4_TLEs_ID, telemetry, 33);
   *complete = telemetry[0] & 1;
   *err = telemetry[0] >> 1;
   memcpy(&asgp4->epoch, &telemetry[1], 4);
@@ -1634,7 +1639,7 @@ void get_cam_sensor(cam_sensor* cam, uint8_t* address) {
 
 /**
  * @brief
- * 		Get raw sensor measurements
+ * 		Gets the raw sensor measurements.
  * @param measurements
  * 		A struct of floats defined in adcs_handler.h
  * 		Refer to table 153
@@ -1672,7 +1677,7 @@ void get_ecef(ecef* coordinate, uint8_t* address) {
 
 /**
  * @brief
- * 		Get raw GPS measurements
+ * 		Gets the raw GPS measurements.
  * @param measurements
  * 		A struct of floats defined in adcs_handler.h
  * 		Refer to table 158
@@ -1695,7 +1700,7 @@ ADCS_returnState ADCS_get_raw_GPS(adcs_raw_gps* measurements) {
   get_ecef(&measurements->x, &telemetry[12]);
   get_ecef(&measurements->y, &telemetry[18]);
   get_ecef(&measurements->z, &telemetry[24]);
-  measurements->pos_std_dev.x = telemetry[30] * 0.1;  // check -> or .
+  measurements->pos_std_dev.x = telemetry[30] * 0.1;
   measurements->pos_std_dev.y = telemetry[31] * 0.1;
   measurements->pos_std_dev.z = telemetry[32] * 0.1;
   measurements->vel_std_dev.x = telemetry[33];
@@ -1706,7 +1711,7 @@ ADCS_returnState ADCS_get_raw_GPS(adcs_raw_gps* measurements) {
 
 /**
  * @brief
- * 		Get raw data for stars
+ * 		Gets raw data for stars.
  * @param address
  * 		the position in the telemetry frame where the data is located
  * @param i
@@ -1735,7 +1740,7 @@ void get_star_data(star_data* coordinate, uint8_t* address, uint8_t i) {
 
 /**
  * @brief
- * 		Get raw star tracker measurements
+ * 		Gets the raw star tracker measurements.
  * @param measurements
  * 		A struct of floats defined in adcs_handler.h
  * 		Refer to table 159
@@ -1769,7 +1774,7 @@ ADCS_returnState ADCS_get_star_tracker(adcs_star_track* measurements) {
 
 /**
  * @brief
- * 		Get secondary Magnetometer raw measurements
+ * 		Gets the secondary Magnetometer raw measurements.
  * @param Mag
  * 		2nd MTM sampled A/D value
  * @return
@@ -1786,7 +1791,7 @@ ADCS_returnState ADCS_get_MTM2_measurements(xyz16* Mag) {
 /******************* ADCS Power & Temperature ********************/
 /**
  * @brief
- * 		a supplementary function for the ADCS power measurements
+ * 		A supplementary function for the ADCS power measurements
  * @param measurement
  * 		the measured parameter (Table 154)
  * @param address
@@ -1800,7 +1805,7 @@ void get_current(float* measurement, uint8_t* address, float coef) {
 
 /**
  * @brief
- * 		a supplementary function for the ADCS temperature measurements
+ * 		A supplementary function for the ADCS temperature measurements
  * @param measurement
  * 		the measured parameter (Table 154)
  * @param address
@@ -1814,7 +1819,7 @@ void get_temp(float* measurement, uint8_t* address, float coef) {
 
 /**
  * @brief
- * 		Get Power & Temperature measurements
+ * 		Gets the Power & Temperature measurements.
  * @param measurements
  * 		A struct of floats defined in adcs_handler.h
  * 		Refer to table 154
@@ -1855,7 +1860,7 @@ ADCS_returnState ADCS_get_power_temp(adcs_pwr_temp* measurements) {
 /***************************** General *****************************/
 /**
  * @brief
- * 		Control the power state of some components (Table 184)
+ * 		Controls the power state of some components (Table 184).
  * @param control
  * 		an array with the values defined in Table 185:
  * 		0 : off
@@ -1865,7 +1870,7 @@ ADCS_returnState ADCS_get_power_temp(adcs_pwr_temp* measurements) {
  * 		Success of function defined in adcs_types.h
  */
 ADCS_returnState ADCS_set_power_control(uint8_t* control) {
-  uint8_t command[4];
+  uint8_t command[4] = {0};
   command[0] = SET_POWER_CONTROL_ID;
   for (int i = 0; i < 4; i++) {
     command[1] = command[1] | (*(control + i) << 2 * i);
@@ -1874,14 +1879,15 @@ ADCS_returnState ADCS_set_power_control(uint8_t* control) {
     command[2] = command[2] | (*(control + 4 + i) << 2 * i);
   }
   for (int i = 0; i < 2; i++) {
-    command[3] = command[3] | (*(control + i) << 2 * i);
+    command[3] = command[3] | (*(control + 8 + i) << 2 * i);
   }
-  return adcs_telecommand(command, 4);
+  return adcs_telecommand(command,
+                          4);  //* + command[1] and  + command[3]. Tested
 }
 
 /**
  * @brief
- * 		Get the power state of some components (Table 184)
+ * 		Gets the power state of some components (Table 184).
  * @param control
  * 		an array with the values defined in Table 185:
  * 		0 : off
@@ -1902,14 +1908,14 @@ ADCS_returnState ADCS_get_power_control(uint8_t* control) {
     *(control + i + 4) = (telemetry[1] >> 2 * i) & 0x3;
   }
   for (int i = 0; i < 2; i++) {
-    *(control + i) = (telemetry[2] >> 2 * i) & 0x3;
+    *(control + i + 8) = (telemetry[2] >> 2 * i) & 0x3;
   }
   return state;
 }
 
 /**
  * @brief
- * 		Set commanded attitude angles (Table 186)
+ * 		Sets the commanded attitude angles (Table 186).
  * @param att_angle
  * 		roll, pitch, yaw angle
  * @return
@@ -1924,12 +1930,13 @@ ADCS_returnState ADCS_set_attitude_angle(xyz att_angle) {
   raw_val.y = att_angle.y / coef;
   raw_val.z = att_angle.z / coef;
   memcpy(&command[1], &raw_val, 6);
-  return adcs_telecommand(command, 7);
+  return adcs_telecommand(command,
+                          7);  //* Tested. + (command[2]<<8 | command[1])
 }
 
 /**
  * @brief
- * 		Get commanded attitude angles (Table 186)
+ * 		Gets the commanded attitude angles (Table 186).
  * @param att_angle
  * 		roll, pitch, yaw angle
  * @return
@@ -1946,8 +1953,8 @@ ADCS_returnState ADCS_get_attitude_angle(xyz* att_angle) {
 
 /**
  * @brief
- * 		Set target reference for tracking control mode (Table 187)
- * @param att_angle
+ * 		Sets the target reference for tracking control mode (Table 187).
+ * @param target
  * 		longitude, latitude, angle
  * @return
  * 		Success of function defined in adcs_types.h
@@ -1961,8 +1968,8 @@ ADCS_returnState ADCS_set_track_controller(xyz target) {
 
 /**
  * @brief
- * 		Get target reference for tracking control mode (Table 187)
- * @param att_angle
+ * 		Gets the target reference for tracking control mode (Table 187).
+ * @param target
  * 		longitude, latitude, angle
  * @return
  * 		Success of function defined in adcs_types.h
@@ -1979,7 +1986,7 @@ ADCS_returnState ADCS_get_track_controller(xyz* target) {
 
 /**
  * @brief
- * 		Log selection and period for LOG 1,2
+ * 		Log selection and period for SD log 1,2 & UART
  * @param flags_arr
  * 		Up to 80 flags indicating which telemetry frames should be
  * logged
@@ -2000,7 +2007,7 @@ ADCS_returnState ADCS_get_track_controller(xyz* target) {
  */
 ADCS_returnState ADCS_set_log_config(uint8_t* flags_arr, uint16_t period,
                                      uint8_t dest, uint8_t log) {
-  uint8_t command[14];
+  uint8_t command[14] = {0};
   command[0] = SET_SD_LOG1_CONFIG_ID + (log - 1);
   for (int j = 0; j < 10; j++) {
     for (int i = 0; i < 8; i++) {
@@ -2015,12 +2022,13 @@ ADCS_returnState ADCS_set_log_config(uint8_t* flags_arr, uint16_t period,
   } else {
     state = adcs_telecommand(command, 14);
   }
-  return state;
+  return state;  //* Tested. + command[8] or + command[13] or (+ command[12] <<
+                 // 8) | command[11]
 }
 
 /**
  * @brief
- * 		Get log selection and period for LOG 1,2
+ * 		Gets the log selection and period for LOG 1,2 & UART.
  * @param flags_arr
  * 		Up to 80 flags indicating which telemetry frames should be
  * logged
@@ -2033,7 +2041,7 @@ ADCS_returnState ADCS_set_log_config(uint8_t* flags_arr, uint16_t period,
  * @param log
  * 		1 : log1
  * 		2 : log2
- * 		3 : dest
+ * 		3 : UART
  * @attention
  * 		dest for UART is not used.
  * @return
@@ -2061,57 +2069,57 @@ ADCS_returnState ADCS_get_log_config(uint8_t* flags_arr, uint16_t* period,
   } else {
     *dest = telemetry[12];
   }
+
   return state;
 }
 
 /**
  * @brief
- * 		Set reference unit vector for inertial pointing control mode
- * (Table 214)
+ * 		Sets the reference unit vector for inertial pointing control
+ * mode. (Table 214)
  * @param inter_ref
- * 		Intertial reference
+ * 		Inertial reference
  * @param coef
  * 		formatted value = rawval * coef;
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_set_intertial_ref(xyz inter_ref) {
+ADCS_returnState ADCS_set_inertial_ref(xyz iner_ref) {
   uint8_t command[7];
-  command[0] = SET_INTERTIAL_POINT_ID;
+  command[0] = SET_INERTIAL_POINT_ID;
   float coef = 0.0001;
   xyz16 raw_val;
-  raw_val.x = inter_ref.x / coef;
-  raw_val.y = inter_ref.y / coef;
-  raw_val.z = inter_ref.z / coef;
+  raw_val.x = iner_ref.x / coef;
+  raw_val.y = iner_ref.y / coef;
+  raw_val.z = iner_ref.z / coef;
   memcpy(&command[1], &raw_val, 6);
   return adcs_telecommand(command, 7);
 }
 
 /**
  * @brief
- * 		Get reference unit vector for inertial pointing control mode
- * (Table 214)
+ * 		Gets the reference unit vector for inertial pointing control
+ * mode. (Table 214)
  * @param inter_ref
- * 		Intertial reference
+ * 		Inertial reference
  * @param coef
  * 		formatted value = rawval * coef;
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_get_intertial_ref(xyz* inter_ref) {
+ADCS_returnState ADCS_get_inertial_ref(xyz* iner_ref) {
   uint8_t telemetry[6];
   ADCS_returnState state;
-  state = adcs_telemetry(GET_INTERTIAL_POINT_ID, telemetry, 6);
+  state = adcs_telemetry(GET_INERTIAL_POINT_ID, telemetry, 6);
   float coef = 0.0001;
-  get_xyz(inter_ref, &telemetry[0], coef);
-  // get_xyz(&data->angular_rate_covar, &telemetry[36], 0.001);
+  get_xyz(iner_ref, &telemetry[0], coef);
   return state;
 }
 
 /************************* Configuration *************************/
 /**
  * @brief
- * 		Set SGP4 orbit parameter
+ * 		Sets the SGP4 orbit parameter.
  * @param params
  * 		Refer to table 194
  * @return
@@ -2120,20 +2128,13 @@ ADCS_returnState ADCS_get_intertial_ref(xyz* inter_ref) {
 ADCS_returnState ADCS_set_sgp4_orbit_params(adcs_sgp4 params) {
   uint8_t command[65];
   command[0] = SET_SGP4_ORBIT_PARAMS_ID;
-  memcpy(&command[1], &params.inclination, 8);
-  memcpy(&command[9], &params.ECC, 8);
-  memcpy(&command[17], &params.RAAN, 8);
-  memcpy(&command[25], &params.AOP, 8);
-  memcpy(&command[33], &params.Bstar, 8);
-  memcpy(&command[41], &params.MM, 8);
-  memcpy(&command[49], &params.MA, 8);
-  memcpy(&command[57], &params.epoch, 8);
-  return adcs_telecommand(command, 65);
+  memcpy(&command[1], &params, 64);
+  return adcs_telecommand(command, 65);  //* Tested  + params.epoch*10
 }
 
 /**
  * @brief
- * 		Get SGP4 orbit parameter
+ * 		Gets the SGP4 orbit parameter.
  * @param params
  * 		Refer to table 194
  * @return
@@ -2156,9 +2157,9 @@ ADCS_returnState ADCS_get_sgp4_orbit_params(adcs_sgp4* params) {
 
 /**
  * @brief
- * 		Set current hard-coded system configuration
+ * 		Sets the current hard-coded system configuration.
  * @param config
- * 		Refer to table 201
+ * 		Refer to table 201-207
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -2172,7 +2173,7 @@ ADCS_returnState ADCS_set_system_config(adcs_sysConfig config) {
   command[5] = config.CS2_ver;
   command[6] = (config.CS2_cam << 4) | config.CS1_cam;
   command[7] = config.cubeStar_ver;
-  command[8] = (config.include_MTM2 << 4) | config.GPS;  //* check for bool
+  command[8] = (config.include_MTM2 << 4) | config.GPS;
   memcpy(&command[9], &config.MTQ_max_dipole, 12);
   memcpy(&command[21], &config.MTQ_ontime_res, 4);
   memcpy(&command[25], &config.MTQ_max_ontime, 4);
@@ -2191,14 +2192,15 @@ ADCS_returnState ADCS_set_system_config(adcs_sysConfig config) {
   command[171] = (config.CW1.pin << 4) | config.CW1.port;
   command[172] = (config.CW2.pin << 4) | config.CW2.port;
   command[173] = (config.CW3.pin << 4) | config.CW3.port;
-  return adcs_telecommand(command, 174);
+  return adcs_telecommand(command,
+                          174);  //* Tested + command[8] and +command[165]
 }
 
 /**
  * @brief
- * 		Get current hard-coded system configuration
+ * 		Gets the current hard-coded system configuration.
  * @param config
- * 		Refer to table 201
+ * 		Refer to table 201-207
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -2249,7 +2251,7 @@ ADCS_returnState ADCS_get_system_config(adcs_sysConfig* config) {
 
 /**
  * @brief
- * 		Set magnetorquer configuration parameters
+ * 		Sets the magnetorquer configuration parameters.
  * 		(Table 179)
  * @param params
  * 		axis selection : Refer to table 180
@@ -2265,10 +2267,10 @@ ADCS_returnState ADCS_set_MTQ_config(xyzu8 params) {
 
 /**
  * @brief
- * 		Set wheel configuration parameters
+ * 		Sets the wheel configuration parameters.
  * 		(Table 181)
  * @param RW
- * 		an array for the 4 wheels' axis selection (Table 180)
+ * 		An array for the 4 wheels' axis selection (Table 180)
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -2281,7 +2283,7 @@ ADCS_returnState ADCS_set_RW_config(uint8_t* RW) {
 
 /**
  * @brief
- * 		Set rate gyro configuration parameters
+ * 		Sets the rate gyro configuration parameters.
  * 		(Table 182)
  * @param params.sensor_offset
  * 		rate sensor offset [deg/s]
@@ -2306,7 +2308,7 @@ ADCS_returnState ADCS_set_rate_gyro(rate_gyro_config params) {
 
 /**
  * @brief
- * 		Set photodiode pointing directions and scale factors
+ * 		Sets the photodiode pointing directions and scale factors.
  * 		(Table 183)
  * @param config
  * 		css axis selection : Refer to table 180
@@ -2333,8 +2335,10 @@ ADCS_returnState ADCS_set_css_config(css_config config) {
 
 /**
  * @brief
- * 		Set configurations of CubeStar
+ * 		Sets configurations of CubeStar.
  * 		(Table 188)
+ * @param coef
+ * 		formatted_value = coef * raw_value
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -2349,14 +2353,14 @@ ADCS_returnState ADCS_set_star_track_config(cubestar_config config) {
   memcpy(&command[1], &raw_val, 6);
   memcpy(&command[7], &config.exposure_t, 45);
   command[52] = (config.loc_predict_en >> 1) | config.module_en;
-  uint8_t search_wid = config.search_wid / 5;  //*
+  uint8_t search_wid = config.search_wid * 5;
   command[53] = search_wid;
   return adcs_telecommand(command, 54);
 }
 
 /**
  * @brief
- * 		Set CubeSense configuration parameters
+ * 		Sets the CubeSense configuration parameters.
  * 		(Table 189)
  * @return
  * 		Success of function defined in adcs_types.h
@@ -2399,7 +2403,7 @@ ADCS_returnState ADCS_set_cubesense_config(cubesense_config params) {
 
 /**
  * @brief
- * 		Set Magnetometers configuration parameters
+ * 		Sets the Magnetometers configuration parameters.
  * 		(Table 190, 191)
  * @param mtm
  * 		Select primary (1) or secondary(2) Magnetometer
@@ -2431,20 +2435,21 @@ ADCS_returnState ADCS_set_mtm_config(mtm_config params, uint8_t mtm) {
   int16_t cell[9];
   int j = 0;
   for (int i = 0; i < 3; i++) {
-    cell[j + 4 * i] = params.sensitivity_mat[i] / coef;  // diagonal
+    cell[i] = params.sensitivity_mat[4 * i] / coef;  // diagonal
   }
   for (int i = 0; i < 3; i++) {
     cell[3 + i] = params.sensitivity_mat[1 + i] / coef;
     cell[6 + i] = params.sensitivity_mat[5 + i] / coef;
   }
-  memcpy(&command[13], &cell, 18);
-  return adcs_telecommand(command, 31);
+  memcpy(&command[13], &cell[0], 18);
+  return adcs_telecommand(command, 31);  //* Tested but not completely exact!  +
+                                         //(command[16] << 8 | command[15])
 }
 
 /**
  * @brief
- * 		Set controller gains and reference values for Detumbling control
- * mode (Table 195)
+ * 		Sets the controller gains and reference values for Detumbling
+ * control. mode (Table 195)
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -2462,8 +2467,8 @@ ADCS_returnState ADCS_set_detumble_config(detumble_config config) {
 
 /**
  * @brief
- * 		Set controller gains and reference value for Y-wheel control
- * mode (Table 196)
+ * 		Sets the controller gains and reference value for Y-wheel
+ * control. mode (Table 196)
  * @return
  * 		Success of function defined in adcs_types.h
  */
@@ -2476,7 +2481,7 @@ ADCS_returnState ADCS_set_ywheel_config(ywheel_ctrl_config params) {
 
 /**
  * @brief
- * 		Set controller gains and reference value for reaction wheel
+ * 		Sets the controller gains and reference value for reaction wheel
  * control mode (Table 197)
  * @return
  * 		Success of function defined in adcs_types.h
@@ -2491,7 +2496,7 @@ ADCS_returnState ADCS_set_rwheel_config(rwheel_ctrl_config params) {
 
 /**
  * @brief
- * 		Set controller gains for tracking control mode
+ * 		Sets the controller gains for tracking control mode.
  * 		(Table 198)
  * @return
  * 		Success of function defined in adcs_types.h
@@ -2505,7 +2510,7 @@ ADCS_returnState ADCS_set_tracking_config(track_ctrl_config params) {
 
 /**
  * @brief
- * 		Set the satellite moment of inertia matrix
+ * 		Sets the satellite moment of inertia matrix.
  * 		(Table 199)
  * @param cell
  * 		diag: Ixx, Iyy, Izz
@@ -2522,7 +2527,7 @@ ADCS_returnState ADCS_set_MoI_mat(moment_inertia_config cell) {
 
 /**
  * @brief
- * 		Set estimation noise covariance and sensor mask
+ * 		Sets the estimation noise covariance and sensor mask.
  * 		(Table 200)
  * @param config.select_arr
  * 		All the bool "use" and auto-transit selects in Table 200
@@ -2533,18 +2538,20 @@ ADCS_returnState ADCS_set_estimation_config(estimation_config config) {
   uint8_t command[32];
   command[0] = SET_ESTIMATE_PARAM;
   memcpy(&command[1], &config, 28);
+  command[29] = 0;
   for (int i = 0; i < 6; i++) {
     command[29] |= (config.select_arr[i] << i);
   }
   command[29] |= (config.MTM_mode << 6);
   command[30] = config.MTM_select | (config.select_arr[7] << 2);
   command[31] = config.cam_sample_period;
-  return adcs_telecommand(command, 32);
+  return adcs_telecommand(command,
+                          32);  //* Tested.  + command[29] and  + command[30]
 }
 
 /**
  * @brief
- * 		Set settings for user-coded estimation and control modes
+ * 		Sets the settings for user-coded estimation and control modes.
  * 		(Table 208)
  * @param setting
  * 		Two arrays of length 48
@@ -2560,7 +2567,7 @@ ADCS_returnState ADCS_set_usercoded_setting(usercoded_setting setting) {
 
 /**
  * @brief
- * 		Set settings for GPS augmented SGP4
+ * 		Sets the settings for GPS augmented SGP4.
  * 		(Table 209)
  * @return
  * 		Success of function defined in adcs_types.h
@@ -2614,7 +2621,7 @@ ADCS_returnState ADCS_set_asgp4_setting(aspg4_setting setting) {
 
 /**
  * @brief
- * 		Get current configuration
+ * 		Gets the current full configuration.
  * @param config
  * 		Refer to table 192
  * @return
@@ -2663,7 +2670,7 @@ ADCS_returnState ADCS_get_full_config(adcs_config* config) {
   memcpy(&config->star_tracker.exposure_t, &telemetry[216], 45);
   config->star_tracker.module_en = telemetry[261] & 0x1;
   config->star_tracker.loc_predict_en = telemetry[261] & 0x2;  // second bit
-  config->star_tracker.search_wid = telemetry[262] * 5;
+  config->star_tracker.search_wid = telemetry[262] / 5;
   memcpy(&config->detumble, &telemetry[263], 8);
   coef = 0.001;
   config->detumble.spin_rate =
