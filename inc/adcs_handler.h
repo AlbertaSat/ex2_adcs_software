@@ -40,6 +40,48 @@ typedef struct {
 } xyzu8;
 
 typedef struct {
+  int32_t x;
+  int32_t y;
+  int32_t z;
+} xyz32;
+
+typedef struct {
+  int32_t pos;
+  int16_t vel;
+} ecef;
+
+typedef struct {
+  uint16_t x_angle;
+  uint16_t y_angle;
+  uint8_t busy;
+  uint8_t result;
+} cam_sim_sensor;
+
+typedef struct {
+  uint32_t unix_t;
+  uint16_t css_raw[10];
+  cam_sim_sensor cam1;
+  cam_sim_sensor cam2;
+  xyz16 MTM;
+  xyz32 rate;
+  xyz16 wheel_speed;
+  xyz16 star1_cam;
+  xyz16 star1_inertial;
+  xyz16 star2_cam;
+  xyz16 star2_inertial;
+  xyz16 star3_cam;
+  xyz16 star3_inertial;
+  uint8_t gps_sol_stat;
+  uint16_t gps_week;
+  uint32_t gps_time;  // ms
+  ecef x;
+  ecef y;
+  ecef z;
+  xyz pos_std_dev;
+  xyzu8 vel_std_dev;
+} sim_sensor_data;
+
+typedef struct {
   uint8_t att_estimate_mode;
   uint8_t att_ctrl_mode;
   uint8_t run_mode;
@@ -110,11 +152,6 @@ typedef struct {
   xyz16 MTM;
   xyz16 rate;
 } adcs_raw_sensor;
-
-typedef struct {
-  int32_t pos;
-  int16_t vel;
-} ecef;
 
 typedef struct {
   uint8_t sol_stat;
@@ -526,15 +563,15 @@ ADCS_returnState ADCS_set_attitude_ctrl_mode(uint8_t ctrl_mode,
                                              uint16_t timeout);
 ADCS_returnState ADCS_set_attitude_estimate_mode(uint8_t mode);
 ADCS_returnState ADCS_trigger_adcs_loop(void);
-ADCS_returnState ADCS_trigger_adcs_loop_sim(uint8_t* sim_data);
+ADCS_returnState ADCS_trigger_adcs_loop_sim(sim_sensor_data sim_data);
 ADCS_returnState ADCS_set_ASGP4_rune_mode(uint8_t mode);
 ADCS_returnState ADCS_trigger_ASGP4(void);
 ADCS_returnState ADCS_set_MTM_op_mode(uint8_t mode);
 ADCS_returnState ADCS_cnv2jpg(uint8_t source, uint8_t QF,
                               uint8_t white_balance);
 ADCS_returnState ADCS_save_img(uint8_t camera, uint8_t img_size);
-ADCS_returnState ADCS_set_magnetorquer_output(int16_t x, int16_t y, int16_t z);
-ADCS_returnState ADCS_set_wheel_speed(int16_t x, int16_t y, int16_t z);
+ADCS_returnState ADCS_set_magnetorquer_output(xyz16 duty_cycle);
+ADCS_returnState ADCS_set_wheel_speed(xyz16 speed);
 ADCS_returnState ADCS_save_config(void);
 ADCS_returnState ADCS_save_orbit_params(void);
 
@@ -580,8 +617,8 @@ ADCS_returnState ADCS_set_log_config(uint8_t* flags_arr, uint16_t period,
                                      uint8_t dest, uint8_t log);
 ADCS_returnState ADCS_get_log_config(uint8_t* flags_arr, uint16_t* period,
                                      uint8_t* dest, uint8_t log);
-ADCS_returnState ADCS_set_intertial_ref(xyz inter_ref);
-ADCS_returnState ADCS_get_intertial_ref(xyz* inter_ref);
+ADCS_returnState ADCS_set_inertial_ref(xyz iner_ref);
+ADCS_returnState ADCS_get_inertial_ref(xyz* iner_ref);
 
 ADCS_returnState ADCS_set_sgp4_orbit_params(adcs_sgp4 params);
 ADCS_returnState ADCS_get_sgp4_orbit_params(adcs_sgp4* params);
