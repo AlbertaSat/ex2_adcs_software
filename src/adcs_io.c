@@ -20,6 +20,7 @@
 #include "adcs_io.h"
 
 #include <string.h>
+#include <stdbool.h>
 
 #include "adcs_types.h"
 #include "mock_uart_i2c.h"
@@ -38,8 +39,25 @@ ADCS_returnState send_uart_telecommand(uint8_t* command, uint32_t length) {
   return TC_err_flag;
 }
 
-ADCS_returnState send_i2c_telecommand(uint8_t* command, uint32_t length) {
-  return ADCS_OK;
+ADCS_returnState send_i2c_telecommand(uint8_t *command, uint32_t length)
+{
+  // Send telecommand
+  i2c_send(command, length);
+
+  // Poll TC Acknowledge Telemetry Format until the Processed flag equals 1.
+  bool processed = false;
+  uint8_t tc_ack[4];
+  while (!processed)
+  {
+    request_i2c_telemetry(LAST_TC_ACK_ID, tc_ack, 4);
+    processed = tc_ack[1] & 1;
+  }
+
+  // Confirm telecommand validity by checking the TC Error flag of the last read TC Acknowledge Telemetry Format.
+  request_i2c_telemetry(LAST_TC_ACK_ID, tc_ack, 4);
+  ADCS_returnState TC_err_flag = tc_ack[2];
+
+  return TC_err_flag;
 }
 
 ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t* telemetry,
@@ -59,6 +77,21 @@ ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t* telemetry,
   return ADCS_OK;
 }
 
-ADCS_returnState request_i2c_telemetry(uint8_t* command, uint32_t length) {
+ADCS_returnState request_i2c_telemetry(uint8_t TM_ID, uint8_t *telemetry,
+                                       uint32_t length)
+{
+  uint8_t reply[length];
+
+  i2c_receive(reply, TM_ID, length);
+
+  for (int i = 0; i < length; i++)
+  {
+    *(telemetry + i) = reply[i];
+  }
+
+  // uint8_t err_reply[6];
+  // i2c_receive(err_reply, COMMS_STAT_ID, 6);
+  // uint8_t TL_err_flag = (err_reply[4] >> 3) & 1;
+
   return ADCS_OK;
 }
