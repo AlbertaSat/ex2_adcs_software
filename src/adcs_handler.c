@@ -24,8 +24,8 @@
 #include "adcs_io.h"
 #include "adcs_types.h"
 
-#define USE_UART
-//#define USE_I2C
+//#define USE_UART
+#define USE_I2C
 
 /*************************** General functions ***************************/
 /**
@@ -35,7 +35,7 @@
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState adcs_telecommand(uint8_t *command, uint32_t length){
+ADCS_returnState adcs_telecommand(uint8_t* command, uint32_t length){
   ADCS_returnState ack = ADCS_OK;
 
 #ifdef USE_UART
@@ -54,7 +54,7 @@ ADCS_returnState adcs_telecommand(uint8_t *command, uint32_t length){
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState adcs_telemetry(uint8_t TM_ID, uint8_t *reply,
+ADCS_returnState adcs_telemetry(uint8_t TM_ID, uint8_t* reply,
                                 uint32_t length){
   ADCS_returnState ack = ADCS_OK;
 #ifdef USE_UART
