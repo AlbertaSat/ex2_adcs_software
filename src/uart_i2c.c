@@ -11,6 +11,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+/**
+ * @file uart_i2c.c
+ * @author Arash Yazdani, Vasu Gupta
+ * @date 2021-02-19
+ */
 
 #include "uart_i2c.h"
 #include "drivers/HL_i2c.h"             // HalCoGen generated i2c driver
