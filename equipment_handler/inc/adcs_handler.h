@@ -524,7 +524,7 @@ ADCS_returnState ADCS_get_SRAM_latchup_count(uint16_t* sram1, uint16_t* sram2);
 ADCS_returnState ADCS_get_EDAC_err_count(uint16_t* single_sram,
                                          uint16_t* double_sram,
                                          uint16_t* multi_sram);
-ADCS_returnState ADCS_get_comms_stat(uint16_t* TC_num, uint16_t* TM_num,
+ADCS_returnState ADCS_get_comms_stat(uint16_t telemetry[6], uint16_t* TC_num, uint16_t* TM_num,
                                      uint8_t* flags_arr);
 
 // Common Config Msgs
@@ -581,6 +581,7 @@ ADCS_returnState ADCS_get_current_state(adcs_state* data);
 ADCS_returnState ADCS_get_jpg_cnv_progress(uint8_t* percentage, uint8_t* result,
                                            uint8_t* file_counter);
 ADCS_returnState ADCS_get_cubeACP_state(uint8_t* flags_arr);
+ADCS_returnState ADCS_get_sat_pos_LLH(xyz* target);
 ADCS_returnState ADCS_get_execution_times(uint16_t* adcs_update,
                                           uint16_t* sensor_comms,
                                           uint16_t* sgp4_propag,
