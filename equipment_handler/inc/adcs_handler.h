@@ -510,7 +510,7 @@ ADCS_returnState ADCS_get_TC_ack(uint8_t* last_tc_id, bool* tc_processed,
                                  ADCS_returnState* tc_err_stat,
                                  uint8_t* tc_err_idx);
 ADCS_returnState ADCS_get_file_download_buffer(uint16_t* packet_count,
-                                               uint8_t* file[20]);
+                                               uint8_t** file[20]);
 ADCS_returnState ADCS_get_file_download_block_stat(bool* ready, bool* param_err,
                                                    uint16_t* crc16_checksum,
                                                    uint16_t* length);
@@ -614,9 +614,9 @@ ADCS_returnState ADCS_set_attitude_angle(xyz att_angle);
 ADCS_returnState ADCS_get_attitude_angle(xyz* att_angle);
 ADCS_returnState ADCS_set_track_controller(xyz target);
 ADCS_returnState ADCS_get_track_controller(xyz* target);
-ADCS_returnState ADCS_set_log_config(uint8_t* flags_arr, uint16_t period,
+ADCS_returnState ADCS_set_log_config(uint8_t** flags_arr, uint16_t period,
                                      uint8_t dest, uint8_t log);
-ADCS_returnState ADCS_get_log_config(uint8_t* flags_arr, uint16_t* period,
+ADCS_returnState ADCS_get_log_config(uint8_t** flags_arr, uint16_t* period,
                                      uint8_t* dest, uint8_t log);
 ADCS_returnState ADCS_set_inertial_ref(xyz iner_ref);
 ADCS_returnState ADCS_get_inertial_ref(xyz* iner_ref);

@@ -229,7 +229,7 @@ ADCS_returnState HAL_ADCS_get_SD_format_progress(bool* format_busy,
                                              bool* erase_all_busy);
 ADCS_returnState HAL_ADCS_get_TC_ack(ADCS_TC_ack* TC_ack);
 ADCS_returnState HAL_ADCS_get_file_download_buffer(uint16_t* packet_count,
-                                               uint8_t* file[20]);
+                                               uint8_t** file[20]);
 ADCS_returnState HAL_ADCS_get_file_download_block_stat(ADCS_file_download_block_stat* file_download_block_stat);
 ADCS_returnState HAL_ADCS_get_file_info(ADCS_file_info* file_info);
 ADCS_returnState HAL_ADCS_get_init_upload_stat(bool* busy);
@@ -311,9 +311,9 @@ ADCS_returnState HAL_ADCS_set_attitude_angle(xyz att_angle);
 ADCS_returnState HAL_ADCS_get_attitude_angle(xyz* att_angle);
 ADCS_returnState HAL_ADCS_set_track_controller(xyz target);
 ADCS_returnState HAL_ADCS_get_track_controller(xyz* target);
-ADCS_returnState HAL_ADCS_set_log_config(uint8_t* flags_arr[10], uint16_t period,
+ADCS_returnState HAL_ADCS_set_log_config(uint8_t** flags_arr[10], uint16_t period,
                                      uint8_t dest, uint8_t log);
-ADCS_returnState HAL_ADCS_get_log_config(uint8_t* flags_arr[10], uint16_t* period,
+ADCS_returnState HAL_ADCS_get_log_config(uint8_t** flags_arr[10], uint16_t* period,
                                      uint8_t* dest, uint8_t log);
 ADCS_returnState HAL_ADCS_set_inertial_ref(xyz iner_ref);
 ADCS_returnState HAL_ADCS_get_inertial_ref(xyz* iner_ref);
