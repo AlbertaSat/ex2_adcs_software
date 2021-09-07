@@ -68,7 +68,7 @@ ADCS_returnState HAL_ADCS_get_TC_ack(ADCS_TC_ack *TC_ack) {
     return ADCS_get_TC_ack(&TC_ack->last_tc_id, &TC_ack->tc_processed, &TC_ack->tc_err_stat, &TC_ack->tc_err_idx);
 }
 
-ADCS_returnState HAL_ADCS_get_file_download_buffer(uint16_t *packet_count, uint8_t *file[20]) {
+ADCS_returnState HAL_ADCS_get_file_download_buffer(uint16_t *packet_count, uint8_t **file[20]) {
     return ADCS_get_file_download_buffer(packet_count, file);
 }
 
@@ -273,12 +273,12 @@ ADCS_returnState HAL_ADCS_set_track_controller(xyz target) { return ADCS_set_tra
 
 ADCS_returnState HAL_ADCS_get_track_controller(xyz *target) { return ADCS_get_track_controller(target); }
 
-ADCS_returnState HAL_ADCS_set_log_config(uint8_t *flags_arr[10], uint16_t period, uint8_t dest, uint8_t log) {
+ADCS_returnState HAL_ADCS_set_log_config(uint8_t **flags_arr[10], uint16_t period, uint8_t dest, uint8_t log) {
     return ADCS_set_log_config(flags_arr, period, dest, log);
 }
 
-ADCS_returnState HAL_ADCS_get_log_config(uint8_t *flags_arr[10], uint16_t *period, uint8_t *dest, uint8_t log) {
-    return ADCS_get_log_config(flags_arr, &period, &dest, log);
+ADCS_returnState HAL_ADCS_get_log_config(uint8_t **flags_arr[10], uint16_t *period, uint8_t *dest, uint8_t log) {
+    return ADCS_get_log_config(flags_arr, period, dest, log);
 }
 
 ADCS_returnState HAL_ADCS_set_inertial_ref(xyz iner_ref) { return ADCS_set_inertial_ref(iner_ref); }
