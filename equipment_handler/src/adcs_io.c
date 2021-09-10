@@ -85,14 +85,14 @@ ADCS_returnState send_uart_telecommand(uint8_t *command, uint32_t length) {
     memcpy(&frame[2], &command, length);
     frame[length + 2] = ADCS_ESC_CHAR;
     frame[length + 2] = ADCS_EOM;
-    sciSend(ADCS_SCI, frame, length + 4);
+    sciSend(ADCS_SCI, length+4, frame);
     xSemaphoreTake(tx_semphr, portMAX_DELAY); // TODO: make a reasonable timeout
 
     int received = 0;
     uint8_t reply[6];
 
     while (received < 6) {
-        xQueueReceive(adcsQueue, reply[received], portMAX_DELAY); // TODO: make a reasonable timeout
+        xQueueReceive(adcsQueue, &(reply[received]), portMAX_DELAY); // TODO: make a reasonable timeout
         received++;
     }
     ADCS_returnState TC_err_flag = reply[3];
@@ -149,14 +149,14 @@ ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint3
     frame[3] = ADCS_ESC_CHAR;
     frame[4] = ADCS_EOM;
 
-    sciSend(ADCS_SCI, frame, 5);
+    sciSend(ADCS_SCI, 5, frame);
     xSemaphoreTake(tx_semphr, portMAX_DELAY); // TODO: make a reasonable timeout
 
     int received = 0;
     uint8_t reply[length + 5];
 
     while (received < length + 5) {
-        xQueueReceive(adcsQueue, reply[received], portMAX_DELAY); // TODO: make a reasonable timeout
+        xQueueReceive(adcsQueue, &reply[received], portMAX_DELAY); // TODO: make a reasonable timeout
         received++;
     }
 
