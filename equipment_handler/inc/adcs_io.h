@@ -19,6 +19,7 @@
 #include "adcs_types.h"
 
 #define ADCS_I2C_ADDR 0x57
+#define UART_TIMEOUT_MS 100
 
 void init_adcs_io();
 
