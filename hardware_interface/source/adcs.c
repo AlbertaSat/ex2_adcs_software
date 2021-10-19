@@ -46,9 +46,8 @@ ADCS_returnState HAL_ADCS_get_node_identification(ADCS_node_identification *node
                                         &node_id->minor_firm_ver, &node_id->runtime_s, &node_id->runtime_ms);
 }
 
-ADCS_returnState HAL_ADCS_get_boot_program_stat(ADCS_boot_program_stat *boot_program_stat) {
-    return ADCS_get_boot_program_stat(&boot_program_stat->mcu_reset_cause, &boot_program_stat->boot_cause,
-                                      &boot_program_stat->boot_count, &boot_program_stat->boot_idx);
+ADCS_returnState HAL_ADCS_get_boot_program_stat(ADCS_boot_program_stat* boot_program_stat) {
+    return ADCS_get_boot_program_stat(&boot_program_stat->mcu_reset_cause, &boot_program_stat->boot_cause, &boot_program_stat->boot_count, &boot_program_stat->boot_idx, &boot_program_stat->major_firm_version, &boot_program_stat->minor_firm_version);
 }
 
 ADCS_returnState HAL_ADCS_get_boot_index(ADCS_boot_index *boot_index) {
@@ -106,8 +105,13 @@ ADCS_returnState HAL_ADCS_get_comms_stat(uint16_t *comm_status) {
     ADCS_returnState return_state;
     uint16_t TC_num = 0;
     uint16_t TM_num = 0;
-    uint8_t flags_arr = 0;
-    return_state = ADCS_get_comms_stat(comm_status, &TC_num, &TM_num, &flags_arr);
+    uint8_t flags_arr[6] = {0};
+    return_state = ADCS_get_comms_stat(&TC_num, &TM_num, flags_arr);
+    *(comm_status) = TC_num;
+    *(comm_status+1) = TM_num;
+    *(comm_status+2) = (flags_arr[0] << 8) | flags_arr[1];
+    *(comm_status+3) = (flags_arr[2] << 8) | flags_arr[3];
+    *(comm_status+4) = (flags_arr[4] << 8) | flags_arr[5];
 
     return return_state;
 }
@@ -305,7 +309,7 @@ ADCS_returnState HAL_ADCS_set_star_track_config(cubestar_config config) {
     return ADCS_set_star_track_config(config);
 }
 
-ADCS_returnState HAL_ADCS_set_cubesense_config(cubesense_config params) {
+ADCS_returnState HAL_ADCS_set_cubesense_config(cubesense_config *params) {
     return ADCS_set_cubesense_config(params);
 }
 
@@ -369,6 +373,7 @@ ADCS_returnState HAL_ADCS_getHK(ADCS_HouseKeeping *adcs_hk) {
         adcs_hk->ECEF_Position_Y = data.ecef_pos.y;
         adcs_hk->ECEF_Position_Z = data.ecef_pos.z;
     }
+    
 
     if (temp = HAL_ADCS_get_measurements(&mes) != 0) {
         return_state = temp;
@@ -394,6 +399,7 @@ ADCS_returnState HAL_ADCS_getHK(ADCS_HouseKeeping *adcs_hk) {
         adcs_hk->Mag_Field_Vector_Y = mes.magnetic_field.y;
         adcs_hk->Mag_Field_Vector_Z = mes.magnetic_field.z;
     }
+    
 
     if (temp = HAL_ADCS_get_power_temp(&pwr) != 0) {
         return_state = temp;
@@ -422,6 +428,8 @@ ADCS_returnState HAL_ADCS_getHK(ADCS_HouseKeeping *adcs_hk) {
         adcs_hk->Sat_Position_LLH_X = pos.x;
         adcs_hk->Sat_Position_LLH_Y = pos.y;
         adcs_hk->Sat_Position_LLH_Z = pos.z;
+    
+
     }
 
     if (temp = HAL_ADCS_get_comms_stat(&adcs_hk->Comm_Status) != 0)

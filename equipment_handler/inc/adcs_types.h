@@ -29,7 +29,8 @@ typedef enum ADCS_returnState {
     ADCS_INVALID_ID = 1,
     ADCS_INCORRECT_LENGTH = 2,
     ADCS_INVALID_PARAMETERS = 3,
-    ADCS_CRC_ERROR = 4
+    ADCS_CRC_ERROR = 4,
+    ADCS_MALLOC_FAILED = 5
 } ADCS_returnState;
 
 typedef enum Common_Telecommand_IDs {
@@ -178,9 +179,24 @@ typedef enum ACP_ConfigMsgs_IDs {
     SET_USERCODED_PARAM_ID = 29,
     SET_ASGP4_PARAM_ID = 28,
 
+    GET_CUBESENSE_CONFIG_ID = 203,
     GET_SGP4_ORBIT_PARAMS_ID = 207,
     GET_SYSTEM_CONFIG_ID = 225,
     GET_FULL_CONFIG_ID = 206 // Includes 136:139, 202:205, 208-209, 217, 221:223, 226-227
 } ACP_ConfigMsgs_IDs;
+
+typedef enum PowerCTRL_IDs {
+    Set_CubeCTRLSgn_Power = 0,
+    Set_CubeCTRLMtr_Power  = 1,
+    Set_CubeSense1_Power = 2,
+    Set_CubeSense2_Power = 3,
+    Set_CubeStar_Power = 4,
+    Set_CubeWheel1_Power = 5,
+    Set_CubeWheel2_Power = 6,
+    Set_CubeWheel3_Power = 7,
+    Set_Motor_Power = 8,
+    Set_GPS_Power = 9
+
+} PowerCTRL_IDs;
 
 #endif /* ADCS_TYPES_H */
