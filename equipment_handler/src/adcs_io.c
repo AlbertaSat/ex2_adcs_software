@@ -30,7 +30,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define QUEUE_LENGTH 32
+#define QUEUE_LENGTH 65
 #define ITEM_SIZE 1
 
 static QueueHandle_t adcsQueue;
@@ -93,7 +93,10 @@ ADCS_returnState send_uart_telecommand(uint8_t *command, uint32_t length) {
     xSemaphoreTake(tx_semphr, UART_TIMEOUT_MS); // TODO: create response if it times out.
 
     int received = 0;
-    uint8_t reply[6];
+    uint8_t *reply = (uint8_t*)pvPortMalloc(6);
+    if (reply == NULL) {
+        return ADCS_MALLOC_FAILED;
+    }
 
     while (received < 6) {
         xQueueReceive(adcsQueue, &(reply[received]), UART_TIMEOUT_MS); // TODO: create response if it times out.
@@ -101,6 +104,7 @@ ADCS_returnState send_uart_telecommand(uint8_t *command, uint32_t length) {
     }
     ADCS_returnState TC_err_flag = reply[3];
     xSemaphoreGive(uart_mutex);
+    vPortFree(reply);
     return TC_err_flag;
 }
 
@@ -156,7 +160,7 @@ ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint3
     sciSend(ADCS_SCI, 5, frame);
     xSemaphoreTake(tx_semphr, UART_TIMEOUT_MS); //  TODO: add error handling
     int received = 0;
-    uint8_t *reply = pvPortMalloc(length+5);
+    uint8_t *reply = (uint8_t*)pvPortMalloc(length+5);
     if (reply == NULL) {
         return ADCS_MALLOC_FAILED;
     }
