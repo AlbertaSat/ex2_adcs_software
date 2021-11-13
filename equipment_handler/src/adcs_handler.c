@@ -1021,10 +1021,11 @@ ADCS_returnState ADCS_get_bootloader_state(uint16_t *uptime, uint8_t *flags_arr)
     ADCS_returnState state;
     state = adcs_telemetry(GET_BOOTLOADER_STATE_ID, telemetry, 6);
     *uptime = (telemetry[1] << 8) + telemetry[0];
-    uint32_t flags;
-    memcpy(&flags, &telemetry[2], 4);
-    for (int i = 0; i < 12; i++) {
-        *(flags_arr + i) = (flags >> i) & 1;
+
+    for(int k = 0; k < 2; k++){
+        for (int i = 0; i < 8; i++) {
+            *(flags_arr + k*8 + i) = (telemetry[2+k] >> i) & 1;
+        }
     }
     return state;
 }
@@ -1120,8 +1121,8 @@ ADCS_returnState ADCS_clear_latched_errs(bool adcs_flag, bool hk_flag) {
     uint8_t command[2];
     command[0] = CLEAR_LATCHED_ERRS_ID;
     command[1] = adcs_flag + 2 * hk_flag;
-    return adcs_telecommand(command,
-                            2); //* add "+ command[1]" for test and let it fail and check the value
+    return adcs_telecommand(command, 2);
+    //* add "+ command[1]" for test and let it fail and check the value
 }
 
 /**
