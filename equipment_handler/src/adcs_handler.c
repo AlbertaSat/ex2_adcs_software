@@ -12,8 +12,8 @@
  * GNU General Public License for more details.
  */
 /**
- * @file adcs_commands.c
- * @author Andrew Rooney, Vasu Gupta, Arash Yazdani
+ * @file adcs_handler.c
+ * @author Andrew Rooney, Vasu Gupta, Arash Yazdani, Thomas Ganley, Nick Sorensen, Pundeep Hundal
  * @date 2020-08-09
  */
 
@@ -1021,10 +1021,11 @@ ADCS_returnState ADCS_get_bootloader_state(uint16_t *uptime, uint8_t *flags_arr)
     ADCS_returnState state;
     state = adcs_telemetry(GET_BOOTLOADER_STATE_ID, telemetry, 6);
     *uptime = (telemetry[1] << 8) + telemetry[0];
-    uint32_t flags;
-    memcpy(&flags, &telemetry[2], 4);
-    for (int i = 0; i < 12; i++) {
-        *(flags_arr + i) = (flags >> i) & 1;
+
+    for(int k = 0; k < 2; k++){
+        for (int i = 0; i < 8; i++) {
+            *(flags_arr + k*8 + i) = (telemetry[2+k] >> i) & 1;
+        }
     }
     return state;
 }
@@ -1120,8 +1121,8 @@ ADCS_returnState ADCS_clear_latched_errs(bool adcs_flag, bool hk_flag) {
     uint8_t command[2];
     command[0] = CLEAR_LATCHED_ERRS_ID;
     command[1] = adcs_flag + 2 * hk_flag;
-    return adcs_telecommand(command,
-                            2); //* add "+ command[1]" for test and let it fail and check the value
+    return adcs_telecommand(command, 2);
+    //* add "+ command[1]" for test and let it fail and check the value
 }
 
 /**
@@ -1303,7 +1304,12 @@ ADCS_returnState ADCS_save_img(uint8_t camera, uint8_t img_size) {
 ADCS_returnState ADCS_set_magnetorquer_output(xyz16 duty_cycle) {
     uint8_t command[7];
     command[0] = SET_MAGNETORQUER_OUTPUT_ID;
-    memcpy(&command[1], &duty_cycle, 6);
+    command[1] = (duty_cycle.x) & 0x00FF;
+    command[2] = (duty_cycle.x >> 8) & 0x00FF;
+    command[3] = (duty_cycle.y) & 0x00FF;
+    command[4] = (duty_cycle.y >> 8) & 0x00FF;
+    command[5] = (duty_cycle.z) & 0x00FF;
+    command[6] = (duty_cycle.z >> 8) & 0x00FF;
     return adcs_telecommand(command, 7); //* + (256*command[6] + command[5])
 }
 
@@ -1321,7 +1327,12 @@ ADCS_returnState ADCS_set_magnetorquer_output(xyz16 duty_cycle) {
 ADCS_returnState ADCS_set_wheel_speed(xyz16 speed) {
     uint8_t command[7];
     command[0] = SET_WHEEL_SPEED_ID;
-    memcpy(&command[1], &speed, 6);
+    command[1] = (speed.x) & 0x00FF;
+    command[2] = (speed.x >> 8) & 0x00FF;
+    command[3] = (speed.y) & 0x00FF;
+    command[4] = (speed.y >> 8) & 0x00FF;
+    command[5] = (speed.z) & 0x00FF;
+    command[6] = (speed.z >> 8) & 0x00FF;
     return adcs_telecommand(command, 7);
 }
 
@@ -1361,29 +1372,49 @@ ADCS_returnState ADCS_save_orbit_params(void) {
 ADCS_returnState ADCS_get_current_state(adcs_state *data) {
     uint8_t telemetry[54];
     ADCS_returnState state;
+
     state = adcs_telemetry(ADCS_STATE, telemetry, 54);
     data->att_estimate_mode = telemetry[0] & 0xF;    // Refer to table 80
     data->att_ctrl_mode = (telemetry[0] >> 4) & 0xF; // Refer to table 78
     data->run_mode = telemetry[1] & 0x3;             // Refer to table 75
     data->ASGP4_mode = (telemetry[1] >> 2) & 0x3;    // Refer to table 87
+
+    // Offset: 12 (Table 149)
     for (int i = 0; i < 4; i++) {
         *(data->flags_arr + i) = (telemetry[1] >> (i + 4)) & 1;
     }
-    uint32_t flags1;
-    memcpy(&flags1, &telemetry[2], 4);
-    for (int i = 0; i < 32; i++) {
-        *(data->flags_arr + i + 4) = (flags1 >> i) & 1;
+
+    // Offset: 16 (Table 149)
+    for(int k = 0; k < 4; k++){
+        // Offset: 16 + 8*k (Table 149)
+        for (int i = 0; i < 8; i++) {
+            *(data->flags_arr + k*8 + i + 4) = (telemetry[2+k] >> i) & 1;
+        }
     }
-    uint32_t flags2;
-    memcpy(&flags2, &telemetry[6], 4);
-    for (int i = 0; i < 3; i++) {
-        *(data->flags_arr + i + 36) = (flags2 >> i) & 1;
+
+    // Offset: 48 (Table 149)
+    for (int i = 0; i < 4; i++) {
+        *(data->flags_arr + i + 36) = (telemetry[6] >> i) & 1;
     }
-    // position:52
-    data->MTM_sample_mode = (flags2 >> 4) & 0x3; // Refer to table 90
-    for (int i = 6; i < 18; i++) {
-        *(data->flags_arr + i + 34) = (flags2 >> i) & 1; // 34 because 2 were for sample mode
+
+    // Offset: 52 (Table 149)
+    data->MTM_sample_mode = (telemetry[6] >> 4) & 0x3; // Refer to table 90
+
+    // Offset: 54 (Table 149)
+    for (int i = 0; i < 2; i++) {
+        *(data->flags_arr + i + 40) = (telemetry[6] >> (i + 6)) & 1;
     }
+
+    // Offset: 56 (Table 149)
+    for (int i = 0; i < 8; i++) {
+        *(data->flags_arr + i + 42) = (telemetry[7] >> i) & 1;
+    }
+
+    // Offset: 64 (Table 149)
+    for (int i = 0; i < 2; i++) {
+        *(data->flags_arr + i + 50) = (telemetry[8] >> i) & 1;
+    }
+
     get_xyz(&data->est_angle, &telemetry[12], 0.01); // [deg]
     get_xyz16(&data->est_quaternion, &telemetry[18]);
     get_xyz(&data->est_angular_rate, &telemetry[24], 0.01); // [deg/s]
