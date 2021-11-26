@@ -208,18 +208,24 @@ ADCS_returnState receive_uart_packet(uint8_t *hole_map, uint8_t *image_bytes) {
     uint16_t pixel = 0;
     uint8_t reply[22+5] = {0};
 
-    while (received < (22+5)) {
-        if(xQueueReceive(adcsQueue, reply+received, UART_TIMEOUT_MS) == pdFAIL){
-            return ADCS_UART_FAILED;
+    // Receive a UART file download packet
+    while (received < (ADCS_UART_FILE_DOWNLOAD_PKT_LEN)) {
+        uint8_t retries = 0;
+        if(xQueueReceive(adcsQueue, reply+received, 500) == pdFAIL){
+            retries++;
+            if(retries >= ADCS_UART_FILE_DOWNLOAD_PKT_RETRIES){
+                return ADCS_UART_FAILED;
+            }
         }else{
             received++;
         }
     }
-    pixel = reply[4]*256 + reply[3];
-    *hole_map = *hole_map | 0x1 << pixel;
-//    for (int i = 0; i < 20; i++) {
-//        *(image_bytes + pixel + i) = reply[4 + i];
-//    }
+    // First byte in packet is file download burst ID = 119
+    // Second and third bytes are the packet counter
+    *pckt_counter = (reply[4] << 8) | reply[3];
+
+    memcpy(pckt, &reply[5], ADCS_UART_FILE_DOWNLOAD_PKT_DATA_LEN);
+
     xSemaphoreGive(uart_mutex);
     return ADCS_OK;
 }
