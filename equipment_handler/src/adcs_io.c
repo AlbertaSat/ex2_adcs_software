@@ -214,7 +214,7 @@ ADCS_returnState receive_file_download_uart_packet(uint8_t * pckt, uint16_t * pc
     // Receive a UART file download packet
     while (received < (ADCS_UART_FILE_DOWNLOAD_PKT_LEN)) {
         uint8_t retries = 0;
-        if(xQueueReceive(adcsQueue, reply+received, UART_TIMEOUT_MS) == pdFAIL){
+        if(xQueueReceive(adcsQueue, reply+received, 500) == pdFAIL){
             retries++;
             if(retries >= ADCS_UART_FILE_DOWNLOAD_PKT_RETRIES){
                 return ADCS_UART_FAILED;
@@ -225,9 +225,9 @@ ADCS_returnState receive_file_download_uart_packet(uint8_t * pckt, uint16_t * pc
     }
     // First byte in packet is file download burst ID = 119
     // Second and third bytes are the packet counter
-    *pckt_counter = (reply[2] << 8) | reply[1];
+    *pckt_counter = (reply[4] << 8) | reply[3];
 
-    memcpy(pckt, &reply[3], ADCS_UART_FILE_DOWNLOAD_PKT_DATA_LEN);
+    memcpy(pckt, &reply[5], ADCS_UART_FILE_DOWNLOAD_PKT_DATA_LEN);
 
     xSemaphoreGive(uart_mutex);
 }

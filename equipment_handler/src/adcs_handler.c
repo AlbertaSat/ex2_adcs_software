@@ -22,7 +22,7 @@
 #define USE_UART
 //#define USE_I2C
 
-adcs_file_info *adcs_file_list[255] = {NULL};
+adcs_file_info * adcs_file_list[255] = {NULL};
 uint8_t adcs_file_list_length = 0;
 
 /*************************** General functions ***************************/
@@ -224,6 +224,12 @@ ADCS_returnState ADCS_get_file_list(){
 
 ADCS_returnState ADCS_download_file(uint8_t type_f, uint8_t counter_f){
     uint32_t offset = 0;
+
+    //HARDCODED - remove eventually
+    type_f = adcs_file_list[0]->type;
+    counter_f = adcs_file_list[0]->counter;
+    //HARDCODED end
+
     uint16_t block_length = 1024; //this is the max length of the block to be sent - this is the number of packets sent in a single block (each packet is 20 Bytes)
     ADCS_load_file_download_block(type_f, counter_f, offset, block_length);
 
@@ -247,20 +253,21 @@ ADCS_returnState ADCS_download_file(uint8_t type_f, uint8_t counter_f){
 
     printf("CWD = %s\r\n", buf);
 
-    //make the home directory
-    iErr = red_mkdir("home");
-    if (iErr == -1)
-    {
-        printf("Unexpected error %d from red_mkdir()\r\n", (int)red_errno);
-        exit(red_errno);
-    }
+//    // make the home directory
+//    iErr = red_mkdir("home");
+//    if (iErr == -1)
+//    {
+//        printf("Unexpected error %d from red_mkdir()\r\n", (int)red_errno);
+//        //exit(red_errno);
+//    }
+
 
     //change directory to home
     iErr = red_chdir("home");
     if (iErr == -1)
     {
         printf("Unexpected error %d from red_chdir()\r\n", (int)red_errno);
-        exit(red_errno);
+        //exit(red_errno);
     }
 
     //get the current working directory
@@ -293,8 +300,16 @@ ADCS_returnState ADCS_download_file(uint8_t type_f, uint8_t counter_f){
     uint16_t length_bytes = 20480;
 
     ADCS_initiate_download_burst(msg_length, ignore_hole_map);
-
     ADCS_receive_download_burst(hole_map, file1, length_bytes);
+
+    uint8_t img_buf[100] = {0};
+    red_read(file1, img_buf, 100);
+
+    printf("First 100 bytes of saved file:\r\n");
+    for(int i = 0; i < 100;){
+        printf("%d %d %d %d %d %d %d %d %d %d\r\n", img_buf[i++],img_buf[i++],img_buf[i++],img_buf[i++],img_buf[i++],
+               img_buf[i++],img_buf[i++],img_buf[i++],img_buf[i++],img_buf[i++]);
+    }
 
     iErr = red_close(file1);
     if (iErr == -1)
@@ -542,7 +557,7 @@ void ADCS_receive_download_burst(uint8_t *hole_map, int32_t file_des, uint16_t l
         uint16_t pckt_counter;
         err = receive_file_download_uart_packet(pckt, &pckt_counter);
 
-        if(err = ADCS_UART_FAILED){
+        if(err == ADCS_UART_FAILED){
             // End of file
             break;
         }else if(pckt_counter != i){
@@ -2031,7 +2046,7 @@ ADCS_returnState ADCS_get_power_temp(adcs_pwr_temp *measurements) {
     get_current(&measurements->cubesense1_3v3_I, (telemetry[1] << 8) | telemetry[0], 0.1);     // [mA]
     get_current(&measurements->cubesense1_camSram_I, (telemetry[3] << 8) | telemetry[2], 0.1); // [mA]
     get_current(&measurements->cubesense2_3v3_I, (telemetry[5] << 8) | telemetry[4], 0.1);     // [mA]
-    get_current(&measurements->cubesense2_camSram_I, ((telemetry[7] << 8) | telemetry[6], 0.1); // [mA]
+    get_current(&measurements->cubesense2_camSram_I, (telemetry[7] << 8) | telemetry[6], 0.1); // [mA]
     get_current(&measurements->cubecontrol_3v3_I, (telemetry[9] << 8) | telemetry[8],
                 0.48828125); // [mA]
     get_current(&measurements->cubecontrol_5v_I, (telemetry[11] << 8) | telemetry[10],
