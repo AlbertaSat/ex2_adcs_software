@@ -17,7 +17,6 @@
 
 #include <stdint.h>
 #include "adcs_types.h"
-#include "adcs_handler.h"
 
 #define ADCS_I2C_ADDR 0x57
 #define UART_TIMEOUT_MS 300
@@ -33,7 +32,6 @@ ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint3
 ADCS_returnState request_i2c_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint32_t length);
 
 // receive downloaded packets over uart
-ADCS_returnState receive_file_download_uart_packet(uint8_t * pckt, uint16_t * pckt_counter);
-void write_pckt_to_file(uint32_t file_des, uint8_t * pkt_data, uint8_t length);
+void receieve_uart_packet(uint8_t *hole_map, uint8_t *image_bytes);
 
 #endif /* ADCS_IO_H */
