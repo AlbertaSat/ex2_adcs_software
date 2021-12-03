@@ -30,6 +30,8 @@
 #define USE_UART
 //#define USE_I2C
 
+static SemaphoreHandle_t adcs_file_download_mutex;
+
 adcs_file_info * adcs_file_list[255] = {NULL};
 uint8_t adcs_file_list_length = 0;
 
@@ -181,6 +183,10 @@ void get_3x3(float *matrix, uint8_t *address, float coef) {
 }
 
 /*************************** File Management TC/TM Sequences ***************************/
+void ADCS_init_file_download_mutex(){
+    adcs_file_download_mutex = xSemaphoreCreateMutex();
+}
+
 ADCS_returnState ADCS_get_file_list(){
     ADCS_returnState ret;
 
@@ -192,14 +198,21 @@ ADCS_returnState ADCS_get_file_list(){
 
     // Fill the file list
     ret = ADCS_reset_file_list_read_pointer();
-    if(ret != ADCS_OK) return ret;
+    if(ret != ADCS_OK){
+        printf("Bad return at file list read pointer\n");
+        return ret;
+    }
     adcs_file_info info;
     while(true) {
 
         while(info.updating == true) {
             // Request file info until busy updating flag is not set
             ret = ADCS_get_file_info(&info);
-            if(ret != ADCS_OK) return ret;
+            if(ret != ADCS_OK){
+                printf("Bad return at get file info, index = %d\n", index);
+                return ret;
+            }
+            vTaskDelay(ONE_SECOND);
         }
 
         if((info.counter == 0) && (info.size == 0) && (info.time == 0) && (info.crc16_checksum == 0)) {
@@ -221,7 +234,11 @@ ADCS_returnState ADCS_get_file_list(){
         adcs_file_list[index]->crc16_checksum = info.crc16_checksum;
 
         ret = ADCS_advance_file_list_read_pointer();
-        if(ret != ADCS_OK) return ret;
+        if(ret != ADCS_OK) {
+            printf("Bad return at advance file list read pointer, index = %d\n", index);
+            return ret;
+        }
+
         index++;
         info.updating = true;
     }
@@ -557,7 +574,12 @@ ADCS_returnState ADCS_initiate_download_burst(uint8_t msg_length, bool ignore_ho
     return adcs_telecommand(command, 3);
 }
 
-void ADCS_receive_download_burst(uint8_t *hole_map, uint8_t *image_bytes, uint16_t length_bytes) {
+void ADCS_receive_download_burst(uint8_t *hole_map, int32_t file_des, uint16_t length_bytes) {
+
+    if(xSemaphoreTake(adcs_file_download_mutex, UART_TIMEOUT_MS) != pdTRUE){
+        return ADCS_UART_FAILED;
+    }
+
 #if defined(USE_UART)
     for(int i = 0; i < length_bytes/20; i++) {
         uint8_t pckt[20] = {0};
@@ -586,7 +608,7 @@ void ADCS_receive_download_burst(uint8_t *hole_map, uint8_t *image_bytes, uint16
 #elif defined(USE_I2C)
     //TODO: write receive function for I2C
 #endif
-
+    xSemaphoreGive(adcs_file_download_mutex);
 }
 
 /*************************** Common TMs ***************************/

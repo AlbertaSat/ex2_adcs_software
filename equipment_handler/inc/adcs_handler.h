@@ -24,6 +24,10 @@
 #include <stdint.h>
 
 #include "adcs_types.h"
+#include "adcs_io.h"
+#include "adcs_types.h"
+#include "redposix.h"
+#include "FreeRTOS.h"
 
 // Structs
 typedef struct {
@@ -474,6 +478,11 @@ void get_3x3(float *matrix, uint8_t *address, float coef);
 // send_telecommand
 ADCS_returnState adcs_telecommand(uint8_t *command, uint32_t length);
 ADCS_returnState adcs_telemetry(uint8_t TM_ID, uint8_t *reply, uint32_t length);
+
+// File management TC/TM sequences
+void ADCS_init_file_download_mutex(void);
+ADCS_returnState ADCS_get_file_list(void);
+ADCS_returnState ADCS_download_file(uint8_t type_f, uint8_t counter_f);
 
 // Common Telecommands
 ADCS_returnState ADCS_reset(void);
