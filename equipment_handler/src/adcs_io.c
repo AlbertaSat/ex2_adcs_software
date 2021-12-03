@@ -20,17 +20,9 @@
 #include "adcs_io.h"
 #include "adcs_types.h"
 
-#include "FreeRTOS.h"
-#include "HL_sci.h"
-#include "i2c_io.h"
-#include "os_queue.h"
-#include "os_semphr.h"
-#include "os_task.h"
-#include "system.h"
-#include <stdbool.h>
-#include <string.h>
 
-#define ADCS_QUEUE_LENGTH 200
+
+#define ADCS_QUEUE_LENGTH 600
 #define ITEM_SIZE 1
 
 static QueueHandle_t adcsQueue;
@@ -93,17 +85,22 @@ ADCS_returnState send_uart_telecommand(uint8_t *command, uint32_t length) {
     // Note TC_ID here is included in the command
     sciSend(ADCS_SCI, length+4, frame);
     if(xSemaphoreTake(tx_semphr, UART_TIMEOUT_MS) != pdTRUE) {
+        xSemaphoreGive(uart_mutex);
         return ADCS_UART_FAILED;
     } // TODO: create response if it times out.
 
     int received = 0;
     uint8_t reply[6] = {1};
+    uint8_t attempts = 0;
 
     xQueueReset(adcsQueue);
 
     while (received < 6) {
         if(xQueueReceive(adcsQueue, reply+received, UART_TIMEOUT_MS) == pdFAIL){
-            return ADCS_UART_FAILED;
+            if(++attempts >= 5){
+                xSemaphoreGive(uart_mutex);
+                return ADCS_UART_FAILED;
+            }
         }else{
             received++;
         }
@@ -175,8 +172,6 @@ ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint3
         return ADCS_MALLOC_FAILED;
     }
 
-    xQueueReset(adcsQueue);
-
     while (received < length + 5) {
         if(xQueueReceive(adcsQueue, reply+received, UART_TIMEOUT_MS) == pdFAIL){
             return ADCS_UART_FAILED;
@@ -217,6 +212,7 @@ ADCS_returnState receive_file_download_uart_packet(uint8_t * pckt, uint16_t * pc
         if(xQueueReceive(adcsQueue, reply+received, 500) == pdFAIL){
             retries++;
             if(retries >= ADCS_UART_FILE_DOWNLOAD_PKT_RETRIES){
+                xSemaphoreGive(uart_mutex);
                 return ADCS_UART_FAILED;
             }
         }else{
@@ -230,6 +226,7 @@ ADCS_returnState receive_file_download_uart_packet(uint8_t * pckt, uint16_t * pc
     memcpy(pckt, &reply[5], ADCS_UART_FILE_DOWNLOAD_PKT_DATA_LEN);
 
     xSemaphoreGive(uart_mutex);
+    return ADCS_OK;
 }
 
 void write_pckt_to_file(uint32_t file_des, uint8_t * pkt_data, uint8_t length){

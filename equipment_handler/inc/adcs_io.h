@@ -18,9 +18,18 @@
 #include <stdint.h>
 #include "adcs_types.h"
 #include "adcs_handler.h"
+#include "FreeRTOS.h"
+#include "HL_sci.h"
+#include "i2c_io.h"
+#include "os_queue.h"
+#include "os_semphr.h"
+#include "os_task.h"
+#include "system.h"
+#include <stdbool.h>
+#include <string.h>
 
 #define ADCS_I2C_ADDR 0x57
-#define UART_TIMEOUT_MS 300
+#define UART_TIMEOUT_MS 1500
 
 void init_adcs_io();
 
