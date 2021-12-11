@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2015  University of Alberta
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+/**
+ * @file adcs.h
+ * @author Arash Yazdani, Trung Tran, Thomas Ganley
+ * @date 2021-11-05
+ */
+
 #ifndef ADCS_H
 #define ADCS_H
 
@@ -323,7 +342,7 @@ ADCS_returnState HAL_ADCS_set_RW_config(uint8_t *RW);
 ADCS_returnState HAL_ADCS_set_rate_gyro(rate_gyro_config params);
 ADCS_returnState HAL_ADCS_set_css_config(css_config config);
 ADCS_returnState HAL_ADCS_set_star_track_config(cubestar_config config);
-ADCS_returnState HAL_ADCS_set_cubesense_config(cubesense_config *params);
+ADCS_returnState HAL_ADCS_set_cubesense_config(cubesense_config params);
 ADCS_returnState HAL_ADCS_set_mtm_config(mtm_config params, uint8_t mtm);
 ADCS_returnState HAL_ADCS_set_detumble_config(detumble_config config);
 ADCS_returnState HAL_ADCS_set_ywheel_config(ywheel_ctrl_config params);

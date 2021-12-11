@@ -11,6 +11,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+/**
+ * @file adcs_handler.h
+ * @author Andrew Rooney, Vasu Gupta, Arash Yazdani, Thomas Ganley, Nick Sorensen, Pundeep Hundal
+ * @date 2020-08-09
+ */
 
 #ifndef ADCS_HANDLER_H
 #define ADCS_HANDLER_H
@@ -588,8 +593,8 @@ ADCS_returnState ADCS_get_raw_GPS(adcs_raw_gps *measurements);
 void get_star_data(star_data *coordinate, uint8_t *address, uint8_t i);
 ADCS_returnState ADCS_get_star_tracker(adcs_star_track *measurements);
 ADCS_returnState ADCS_get_MTM2_measurements(xyz16 *Mag);
-void get_current(float *measurement, uint8_t *address, float coef);
-void get_temp(float *measurement, uint8_t *address, float coef);
+void get_current(float *measurement, uint16_t raw, float coef);
+void get_temp(float *measurement, int16_t raw, float coef);
 ADCS_returnState ADCS_get_power_temp(adcs_pwr_temp *measurements);
 
 // ACP Config Msgs
@@ -614,7 +619,7 @@ ADCS_returnState ADCS_set_rate_gyro(rate_gyro_config params);
 ADCS_returnState ADCS_set_css_config(css_config config);
 ADCS_returnState ADCS_set_star_track_config(cubestar_config config);
 ADCS_returnState ADCS_get_cubesense_config(cubesense_config *config);
-ADCS_returnState ADCS_set_cubesense_config(cubesense_config *params);
+ADCS_returnState ADCS_set_cubesense_config(cubesense_config params);
 ADCS_returnState ADCS_set_mtm_config(mtm_config params, uint8_t mtm);
 ADCS_returnState ADCS_set_detumble_config(detumble_config config);
 ADCS_returnState ADCS_set_ywheel_config(ywheel_ctrl_config params);

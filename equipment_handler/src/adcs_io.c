@@ -30,7 +30,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define QUEUE_LENGTH 32
+#define ADCS_QUEUE_LENGTH 100
 #define ITEM_SIZE 1
 
 static QueueHandle_t adcsQueue;
@@ -45,7 +45,7 @@ static SemaphoreHandle_t uart_mutex;
 void init_adcs_io() {
     sciSetBaudrate(ADCS_SCI, 115200);
     tx_semphr = xSemaphoreCreateBinary();
-    adcsQueue = xQueueCreate(QUEUE_LENGTH, ITEM_SIZE);
+    adcsQueue = xQueueCreate(ADCS_QUEUE_LENGTH, ITEM_SIZE);
     uart_mutex = xSemaphoreCreateMutex();
     adcsBuffer = 0;
     sciReceive(ADCS_SCI, 1, &adcsBuffer);
@@ -79,7 +79,9 @@ void adcs_sciNotification(sciBASE_t *sci, int flags) {
  *
  */
 ADCS_returnState send_uart_telecommand(uint8_t *command, uint32_t length) {
-    xSemaphoreTake(uart_mutex, UART_TIMEOUT_MS); //  TODO: create response if it times out.
+    if(xSemaphoreTake(uart_mutex, UART_TIMEOUT_MS) != pdTRUE) {
+          return ADCS_UART_FAILED;
+    } //  TODO: create response if it times out.
 
     uint8_t *frame = (uint8_t *)pvPortMalloc(sizeof(uint8_t)*(length+4));
     *frame = ADCS_ESC_CHAR;
@@ -90,14 +92,21 @@ ADCS_returnState send_uart_telecommand(uint8_t *command, uint32_t length) {
 
     // Note TC_ID here is included in the command
     sciSend(ADCS_SCI, length+4, frame);
-    xSemaphoreTake(tx_semphr, UART_TIMEOUT_MS); // TODO: create response if it times out.
+    if(xSemaphoreTake(tx_semphr, UART_TIMEOUT_MS) != pdTRUE) {
+        return ADCS_UART_FAILED;
+    } // TODO: create response if it times out.
 
     int received = 0;
-    uint8_t reply[6];
+    uint8_t reply[6] = {1};
+
+    xQueueReset(adcsQueue);
 
     while (received < 6) {
-        xQueueReceive(adcsQueue, &(reply[received]), UART_TIMEOUT_MS); // TODO: create response if it times out.
-        received++;
+        if(xQueueReceive(adcsQueue, reply+received, UART_TIMEOUT_MS) == pdFAIL){
+            return ADCS_UART_FAILED;
+        }else{
+            received++;
+        }
     }
     ADCS_returnState TC_err_flag = reply[3];
     xSemaphoreGive(uart_mutex);
@@ -144,7 +153,9 @@ ADCS_returnState send_i2c_telecommand(uint8_t *command, uint32_t length) {
  * 
  */
 ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint32_t length) {
-    xSemaphoreTake(uart_mutex, UART_TIMEOUT_MS); //  TODO: add error handling
+    if(xSemaphoreTake(uart_mutex, UART_TIMEOUT_MS) != pdTRUE){
+        return ADCS_UART_FAILED;
+    }
 
     uint8_t frame[5];
     frame[0] = ADCS_ESC_CHAR;
@@ -154,16 +165,24 @@ ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint3
     frame[4] = ADCS_EOM;
 
     sciSend(ADCS_SCI, 5, frame);
-    xSemaphoreTake(tx_semphr, UART_TIMEOUT_MS); //  TODO: add error handling
+    if(xSemaphoreTake(tx_semphr, UART_TIMEOUT_MS) != pdTRUE){
+        return ADCS_UART_FAILED;
+    }
+
     int received = 0;
-    uint8_t *reply = pvPortMalloc(length+5);
+    uint8_t *reply = (uint8_t*)pvPortMalloc(length+5);
     if (reply == NULL) {
         return ADCS_MALLOC_FAILED;
     }
 
+    xQueueReset(adcsQueue);
+
     while (received < length + 5) {
-        xQueueReceive(adcsQueue, &reply[received], UART_TIMEOUT_MS); //  TODO: add error handling
-        received++;
+        if(xQueueReceive(adcsQueue, reply+received, UART_TIMEOUT_MS) == pdFAIL){
+            return ADCS_UART_FAILED;
+        }else{
+            received++;
+        }
     }
 
     for (int i = 0; i < length; i++) {
@@ -190,14 +209,17 @@ void receieve_uart_packet(uint8_t *hole_map, uint8_t *image_bytes) {
     uint8_t reply[22+5] = {0};
 
     while (received < (22+5)) {
-        xQueueReceive(adcsQueue, &(reply[received]), UART_TIMEOUT_MS); // TODO: exit function once timeout finishes
-        received++;
+        if(xQueueReceive(adcsQueue, reply+received, UART_TIMEOUT_MS) == pdFAIL){
+            return ADCS_UART_FAILED;
+        }else{
+            received++;
+        }
     }
-    pixel = reply[2] << 8 | reply[3];
+    pixel = reply[4]*256 + reply[3];
     *hole_map = *hole_map | 0x1 << pixel;
-    for (int i = 0; i < 20; i++) {
-        *(image_bytes + pixel + i) = reply[4 + i];
-    }
+//    for (int i = 0; i < 20; i++) {
+//        *(image_bytes + pixel + i) = reply[4 + i];
+//    }
     xSemaphoreGive(uart_mutex);
 }
 
