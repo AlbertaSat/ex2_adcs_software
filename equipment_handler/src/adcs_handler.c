@@ -16,7 +16,10 @@
  * @author Andrew Rooney, Vasu Gupta, Arash Yazdani, Thomas Ganley, Nick Sorensen, Pundeep Hundal
  * @date 2020-08-09
  */
-
+#include <stddef.h>
+#include <stdint.h>
+#include <FreeRTOS.h>
+#include <os_portable.h>
 #include "adcs_handler.h"
 
 #include <string.h>
@@ -337,8 +340,8 @@ ADCS_returnState ADCS_file_upload_packet(uint16_t packet_number, char *file_byte
     command[0] = FILE_UPLOAD_PACKET_ID;
     command[1] = packet_number & 0xFF;
     command[2] = packet_number >> 8;
-    memcpy(&command[3], file_bytes, 22);
-    return adcs_telecommand(command, 3);
+    memcpy(&command[3], file_bytes, 20);
+    return adcs_telecommand(command, sizeof(command));
 }
 
 /**
@@ -406,7 +409,7 @@ ADCS_returnState ADCS_initiate_download_burst(uint8_t msg_length, bool ignore_ho
 void ADCS_receive_download_burst(uint8_t *hole_map, uint8_t *image_bytes, uint16_t length_bytes) {
 #if defined(USE_UART)
     for(int i = 0; i < length_bytes/20; i++) {
-        receieve_uart_packet(hole_map, image_bytes);
+        receive_uart_packet(hole_map, image_bytes);
     }
 #elif defined(USE_I2C)
     //TODO: write receive function for I2C
@@ -540,7 +543,7 @@ ADCS_returnState ADCS_get_TC_ack(uint8_t *last_tc_id, bool *tc_processed, ADCS_r
     state = adcs_telemetry(LAST_TC_ACK_ID, telemetry, 4);
     *last_tc_id = telemetry[0];
     *tc_processed = telemetry[1] & 1;
-    *tc_err_stat = telemetry[2];
+    *tc_err_stat = (ADCS_returnState) telemetry[2];
     *tc_err_idx = telemetry[3];
     return state;
 }
@@ -553,7 +556,7 @@ ADCS_returnState ADCS_get_TC_ack(uint8_t *last_tc_id, bool *tc_processed, ADCS_r
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_get_file_download_buffer(uint16_t *packet_count, uint8_t **file[20]) {
+ADCS_returnState ADCS_get_file_download_buffer(uint16_t *packet_count, uint8_t file[20]) {
     uint8_t telemetry[22];
     ADCS_returnState state;
     state = adcs_telemetry(FILE_DL_BUFFER_ID, telemetry, 22);
@@ -572,7 +575,8 @@ ADCS_returnState ADCS_get_file_download_buffer(uint16_t *packet_count, uint8_t *
  * @return
  * 		Success of function defined in adcs_types.h
  */
-ADCS_returnState ADCS_get_file_download_block_stat(bool *ready, bool *param_err, uint16_t *crc16_checksum,
+ADCS_returnState ADCS_get_file_download_block_stat(bool *ready, bool *param_err,
+                                                   uint16_t *crc16_checksum,
                                                    uint16_t *length) {
     uint8_t telemetry[5];
     ADCS_returnState state;
@@ -967,7 +971,7 @@ ADCS_returnState ADCS_run_selected_program(void) {
 ADCS_returnState ADCS_read_program_info(uint8_t index) {
     uint8_t command[2];
     command[0] = READ_PROGRAM_INFO_ID;
-    if (index < 0 || index > 18) {
+    if (index > 18) {
         return ADCS_INVALID_PARAMETERS;
     } else {
         command[1] = index;
@@ -982,7 +986,7 @@ ADCS_returnState ADCS_read_program_info(uint8_t index) {
  * 		Table 66 - Source Program index
  * 		0 : BootLoader, 1 : Internal flash program, 2 : EEPROM,
  * 3-9: External flash program 1-7, 10-17: SD user file 1-8
- * //* not good for services
+ * // not good for services
  * @attention
  * 		flag = 0x5A overwrites the boot segment
  * @return
@@ -991,7 +995,7 @@ ADCS_returnState ADCS_read_program_info(uint8_t index) {
 ADCS_returnState ADCS_copy_program_internal_flash(uint8_t index, uint8_t overwrite_flag) {
     uint8_t command[3];
     command[0] = COPY_PROGRAM_INTERNAL_FLASH_ID;
-    if (index < 0 || index > 18) {
+    if (index > 18) {
         return ADCS_INVALID_PARAMETERS;
     } else {
         command[1] = index;
@@ -2714,7 +2718,6 @@ ADCS_returnState ADCS_set_mtm_config(mtm_config params, uint8_t mtm) {
     raw_val_offset.z = params.channel_offset.z / coef;
     memcpy(&command[7], &raw_val_offset, 6);
     int16_t cell[9];
-    int j = 0;
     for (int i = 0; i < 3; i++) {
         cell[i] = params.sensitivity_mat[4 * i] / coef; // diagonal
     }
