@@ -37,6 +37,11 @@ void CubeTorquers_Common_Test(void);
 void binaryTest_CubeSense1(void);
 void ReactionWheels_Common_Test(uint8_t wheel_number);
 
+void commissioning_init_angular_rates_est(void);
+void commissioning_initial_detumbling(void);
+void commissioning_mag_calibration(void);
+void commissioning_ang_rate_pitch_angle_est(void);
+
 void binaryTest(void) {//TODO: add enums for all adcs_handler functions called
 
 //    printf("Running Bootloader Tests");
@@ -1394,6 +1399,210 @@ void binaryTest_CubeWheel3_MCU(void) {
 }
 
 
+
+void commissioning_initial_angular_rates_est(void){
+    // Step 1 of 3-axis CubeADCS Commissioning 
+    // Determine Initial Angular Rates
+
+    //* Command Sequence
+    // ADCS Run Mode : State = Enabled (1)
+    printf("Running ADCS_set_enabled_state to set 1Hz loop (enabled)...\n");
+    test_returnState = ADCS_set_enabled_state(1);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_enabled_state returned %d \n", test_returnState);
+        while(1);
+    }
+
+
+    // Power Control : CubeControl Signal and/or Motor Power = On (1), All others = Off (0)
+    uint8_t *control = (uint8_t*)pvPortMalloc(10);
+    if (control == NULL) {
+        return ADCS_MALLOC_FAILED;
+    }
+
+    // Verify Power State(s) 
+    printf("Running ADCS_get_power_control...\n");
+    test_returnState = ADCS_get_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    for(int i = 0; i<10; i++){
+        printf("control[%d] = %d \n", i, control[i]);
+    }
+
+    control[Set_CubeCTRLSgn_Power] = 1;
+    control[Set_CubeCTRLMtr_Power] = 1;
+
+    test_returnState = ADCS_set_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    
+    // Verify Power States again
+    test_returnState = ADCS_get_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    for(int i = 0; i<10; i++){
+        printf("control[%d] = %d \n", i, control[i]);
+    }
+
+
+    // Set Estimation Mode : Mode = Magnetometer rate filter (2)
+    test_returnState = ADCS_set_attitude_estimate_mode(2);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+
+
+    //* Telemetry Logging (10s)
+    // Estimated Angular Rates
+    // Rate Sensor Rates
+    // Magnetometer Measurement
+
+    vPortFree(control);
+
+}
+
+void commissioning_initial_detumbling(void){
+    // Step 2 & 3 of ADCS Commissioning
+    // Initial Detumbling
+
+    //* Command Sequence
+    // ADCS Run Mode : State = Enabled (1)
+    printf("Running ADCS_set_enabled_state to set 1Hz loop (enabled)...\n");
+    test_returnState = ADCS_set_enabled_state(1);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_enabled_state returned %d \n", test_returnState);
+        while(1);
+    }
+
+
+     // Power Control : CubeControl Signal and/or Motor Power = On (1), All others = Off (0)
+    uint8_t *control = (uint8_t*)pvPortMalloc(10);
+    if (control == NULL) {
+        return ADCS_MALLOC_FAILED;
+    }
+
+    // Verify Power State(s) 
+    printf("Running ADCS_get_power_control...\n");
+    test_returnState = ADCS_get_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    for(int i = 0; i<10; i++){
+        printf("control[%d] = %d \n", i, control[i]);
+    }
+
+    control[Set_CubeCTRLSgn_Power] = 1;
+    control[Set_CubeCTRLMtr_Power] = 1;
+
+    test_returnState = ADCS_set_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    
+    // Verify Power States again
+    test_returnState = ADCS_get_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    for(int i = 0; i<10; i++){
+        printf("control[%d] = %d \n", i, control[i]);
+    }
+
+    // Set Estimation Mode : Mode = Magnetometer rate filter (2) or MEMS rate sensing (1)
+    test_returnState = ADCS_set_attitude_estimate_mode(1);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+
+    // Delay (1min)
+    vTaskDelay(pDMS_TO_TICKS(60000));
+
+    //* Telemetry Logging (10s)
+    // Estimated Angular Rates
+    // Rate Sensor Rates
+    // Magnetometer Measurement
+
+    vPortFree(control;)
+}
+
+void commissioning_mag_calibration(void){
+    // Step 5 of ADCS Commissioning
+    // Magnetometer Calibration
+    // Prerequisite: All angular rate vector components in range -3 to +3 deg/s
+
+    printf("Running ADCS_set_enabled_state to set 1Hz loop (enabled)...\n");
+    test_returnState = ADCS_set_enabled_state(1);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_enabled_state returned %d \n", test_returnState);
+        while(1);
+    }
+
+    // Power Control : CubeControl Signal and/or Motor Power = On (1), All others = Off (0)
+    uint8_t *control = (uint8_t*)pvPortMalloc(10);
+    if (control == NULL) {
+        return ADCS_MALLOC_FAILED;
+    }
+
+    // Verify Power State(s) 
+    printf("Running ADCS_get_power_control...\n");
+    test_returnState = ADCS_get_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    for(int i = 0; i<10; i++){
+        printf("control[%d] = %d \n", i, control[i]);
+    }
+
+    control[Set_CubeCTRLSgn_Power] = 1;
+    control[Set_CubeCTRLMtr_Power] = 1;
+
+    test_returnState = ADCS_set_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    
+    // Verify Power States again
+    test_returnState = ADCS_get_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+    for(int i = 0; i<10; i++){
+        printf("control[%d] = %d \n", i, control[i]);
+    }
+
+    // Set Estimation Mode  : Mode =  Magnetometer Rate Estimator (2)
+    test_returnState = ADCS_set_attitude_estimate_mode(2);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+
+    // Delay 1 orbit
+    // On-ground Processing
+    // Save Configuration
+
+    //* Telemetry Logging
+
+    vPortFree(control);
+}
+
+void commissioning_ang_rate_pitch_angle_est(void){
+    
+}
 
 //BELOW HERE LIES CODE THAT IS COMMON FOR MULTIPLE PARTS OF BINARY TEST PLAN. THESE FUNCTIONS
 //ARE CALLED BY FUNCTIONS ABOVE HERE, AND SHOULD NOT BE RUN IN ISOLATION
