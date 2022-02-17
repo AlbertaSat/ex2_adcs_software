@@ -16,49 +16,7 @@
 
 // Make sure to define either "USE_UART" or "USE_I2C" in adcs_handler.c depending on which interface is being tested
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <redconf.h>
-#include <redfs.h>
-#include <redfse.h>
-#include <redposix.h>
-#include <redtests.h>
-#include <redvolume.h>
-
-#include "adcs_handler.h"
-#include "adcs_io.h"
-#include "FreeRTOS.h"
-
-void CubeMag_Common_Test(bool);
-void CubeTorquers_Common_Test(void);
-void binaryTest_CubeSense1(void);
-void ReactionWheels_Common_Test(uint8_t wheel_number);
-
-void commissioning_init_angular_rates_est(void);
-void commissioning_initial_detumbling(void);
-void commissioning_mag_calibration(void);
-void commissioning_ang_rate_pitch_angle_est(void);
-
-// ADCS Run modes
-#define ONEHZ_LOOP_ENABLE       1
-
-// Att. Est. modes
-#define MEMS_RATE_SENSING_MODE  1
-#define MAG_RATE_FILTER_MODE    2
-
-//Att. Ctrl. modes
-#define DETUMBLING_MODE     1
-#define Y_THOMSON_MODE      2
-
-// TLM Logging 
-#define TLM_LOG_SDCARD_0    0
-#define TLM_LOG_PERIOD_10s  10
-#define TLM_LOG_PERIOD_STOP 0
-#define TLM_LOG_1           1
-
+#include "adcs_binary_test.h"
 
 void binaryTest(void) {//TODO: add enums for all adcs_handler functions called
 
@@ -69,10 +27,10 @@ void binaryTest(void) {//TODO: add enums for all adcs_handler functions called
 //    printf("Running CubeACP Tests");
 //    binaryTest_CubeACP();
 //    printf("CubeACP Tests Complete!");
-//
-    // printf("CubeSense 1 Tests");
-    // binaryTest_CubeSense1();
-    // printf("CubeSense 1 Tests Complete!");
+
+    printf("CubeSense 1 Tests");
+    binaryTest_CubeSense1();
+    printf("CubeSense 1 Tests Complete!");
 
 //    printf("CubeSense 2 Tests");
 //    binaryTest_CubeSense2();
@@ -88,7 +46,7 @@ void binaryTest(void) {//TODO: add enums for all adcs_handler functions called
 //    printf("CubeMag Signal MCU Tests");
 //    binaryTest_CubeMag_Sgn_MCU();
 //    printf("CubeMag Signal MCU Tests Complete!");
-//
+
 //    printf("CubeTorquers Signal MCU Tests");
 //    binaryTest_CubeTorquers_Sgn_MCU();
 //    printf("CubeTorquers Signal MCU Tests Complete!");
@@ -118,7 +76,7 @@ void binaryTest(void) {//TODO: add enums for all adcs_handler functions called
 //    printf("CubeWheel 1  Tests");
 //    binaryTest_CubeWheel1_MCU();
 //    printf("CubeWheel 1 Tests Complete!");
-//
+
 //    printf("CubeWheel 2  Tests");
 //    binaryTest_CubeWheel2_MCU();
 //    printf("CubeWheel 2 Tests Complete!");
@@ -2383,7 +2341,7 @@ void ReactionWheels_Common_Test(uint8_t wheel_number){
     for (int i = 0; i<3; i++){
 
         if(i == 0){
-            rpm = 4000;
+            rpm = 0;
         }
         else if(i == 1){
             rpm = -2000;
@@ -2393,7 +2351,7 @@ void ReactionWheels_Common_Test(uint8_t wheel_number){
         }
 
         if(wheel_number == 1){
-            speed.x = rpm;
+            speed.y = rpm;  //2U ADCS CubeWheel 1 is set to the y direction
         }
         else if(wheel_number == 2){
             speed.y = rpm;
