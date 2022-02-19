@@ -1475,10 +1475,20 @@ void commissioning_initial_angular_rates_est(void){
         printf("ADCS_set_log_config returned %d \n", test_returnState);
     }
     
-    test_returnState = ADCS_set_log_config(flags, period, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_get_log_config returned %d \n", test_returnState);
+    uint8_t **flags_arr;
+    flags_arr =  (uint8_t **)malloc(10 * sizeof(uint8_t *));
+
+    uint8_t dest = 0;
+    uint16_t period = 100;
+    uint8_t log = 1;
+
+    for (int i = 0; i < 10; i++) {
+        flags_arr[i] = (uint8_t *) malloc(sizeof(uint8_t));
+        if (i == 0) { *(flags_arr[i]) = 0x01; }
+        else { *(flags_arr[i]) = 0x00; }
     }
+
+    vPortFree(control);
 
     for (int i = 0; i < 80, i++){
         
@@ -1680,6 +1690,9 @@ void commissioning_mag_calibration(void){
 }
 
 void commissioning_ang_rate_pitch_angle_est(void){
+    // Step 6 in ADCS Commissioning
+    // Angular Rate and Pitch Angle Estimation
+
     
 }
 
