@@ -1464,6 +1464,19 @@ void commissioning_initial_angular_rates_est(void){
     // Rate Sensor Rates
     // Magnetometer Measurement
 
+    uint8_t **flags_arr;
+    flags_arr =  (uint8_t **)malloc(10 * sizeof(uint8_t *));
+
+    uint8_t dest = 0;
+    uint16_t period = 100;
+    uint8_t log = 1;
+
+    for (int i = 0; i < 10; i++) {
+        flags_arr[i] = (uint8_t *) malloc(sizeof(uint8_t));
+        if (i == 0) { *(flags_arr[i]) = 0x01; }
+        else { *(flags_arr[i]) = 0x00; }
+    }
+
     vPortFree(control);
 
 }
@@ -1601,6 +1614,9 @@ void commissioning_mag_calibration(void){
 }
 
 void commissioning_ang_rate_pitch_angle_est(void){
+    // Step 6 in ADCS Commissioning
+    // Angular Rate and Pitch Angle Estimation
+
     
 }
 
