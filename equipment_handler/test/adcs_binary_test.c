@@ -1450,6 +1450,7 @@ void commissioning_initial_angular_rates_est(void){
         printf("control[%d] = %d \n", i, control[i]);
     }
 
+    vPortFree(control);
 
     // Set Estimation Mode : Mode = Magnetometer rate filter (2)
     test_returnState = ADCS_set_attitude_estimate_mode(2);
@@ -1459,13 +1460,35 @@ void commissioning_initial_angular_rates_est(void){
     }
 
 
-    //* Telemetry Logging (10s)
-    // Estimated Angular Rates
-    // Rate Sensor Rates
-    // Magnetometer Measurement
+   //* Telemetry Logging (10s)
+    printf("Setting Telemetry Logging\n");
+    uint8_t flags[80] = {0};
+    flags[53] = 1;          // Estimated Angular Rates 
+    flags[69] = 1;          // Rate Sensor Rates
+    flags[61] = 1;          // Magnetometer Measurement
+    uint16_t period = 10;   // 10s Period
+    uint8_t sd_card = 0;    // Primary SD Card 1
+    uint8_t log = 1;        // Log 1
 
-    vPortFree(control);
+    test_returnState = ADCS_set_log_config(flags, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+    }
+    
+    test_returnState = ADCS_set_log_config(flags, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_get_log_config returned %d \n", test_returnState);
+    }
 
+    for (int i = 0; i < 80, i++){
+        
+        if (flags[i] != 0)
+        {
+            printf("Bit %d is set\n", i);
+        }
+    }
+
+    printf("Period is %d\n", period);
 }
 
 void commissioning_initial_detumbling(void){
@@ -1482,7 +1505,7 @@ void commissioning_initial_detumbling(void){
     }
 
 
-     // Power Control : CubeControl Signal and/or Motor Power = On (1), All others = Off (0)
+    // Power Control : CubeControl Signal and/or Motor Power = On (1), All others = Off (0)
     uint8_t *control = (uint8_t*)pvPortMalloc(10);
     if (control == NULL) {
         return ADCS_MALLOC_FAILED;
@@ -1514,9 +1537,12 @@ void commissioning_initial_detumbling(void){
         printf("ADCS_get_power_control returned %d \n", test_returnState);
         while(1);
     }
+
     for(int i = 0; i<10; i++){
         printf("control[%d] = %d \n", i, control[i]);
     }
+
+    vPortFree(control);
 
     // Set Estimation Mode : Mode = Magnetometer rate filter (2) or MEMS rate sensing (1)
     test_returnState = ADCS_set_attitude_estimate_mode(1);
@@ -1526,14 +1552,39 @@ void commissioning_initial_detumbling(void){
     }
 
     // Delay (1min)
+    printf("Waiting for 1 minute...\n");
     vTaskDelay(pDMS_TO_TICKS(60000));
 
-    //* Telemetry Logging (10s)
-    // Estimated Angular Rates
-    // Rate Sensor Rates
-    // Magnetometer Measurement
 
-    vPortFree(control;)
+    //* Telemetry Logging (10s)
+    printf("Setting Telemetry Logging\n");
+    uint8_t flags[80] = {0};
+    flags[53] = 1;          // Estimated Angular Rates 
+    flags[69] = 1;          // Rate Sensor Rates
+    flags[61] = 1;          // Magnetometer Measurement
+    uint16_t period = 10;   // 10s Period
+    uint8_t sd_card = 0;    // Primary SD Card 1
+    uint8_t log = 1;        // Log 1
+
+    test_returnState = ADCS_set_log_config(flags, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+    }
+    
+    test_returnState = ADCS_set_log_config(flags, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_get_log_config returned %d \n", test_returnState);
+    }
+
+    for (int i = 0; i < 80, i++){
+        if (flags[i] != 0)
+        {
+            printf("Bit %d is set\n", i);
+        }
+    }
+
+    printf("Period is %d\n", period);
+
 }
 
 void commissioning_mag_calibration(void){
@@ -1584,6 +1635,8 @@ void commissioning_mag_calibration(void){
         printf("control[%d] = %d \n", i, control[i]);
     }
 
+    vPortFree(control);
+    
     // Set Estimation Mode  : Mode =  Magnetometer Rate Estimator (2)
     test_returnState = ADCS_set_attitude_estimate_mode(2);
     if(test_returnState != ADCS_OK){
@@ -1595,14 +1648,54 @@ void commissioning_mag_calibration(void){
     // On-ground Processing
     // Save Configuration
 
-    //* Telemetry Logging
+    //* Telemetry Logging (10s)
+    printf("Setting Telemetry Logging\n");
+    uint8_t flags[80] = {0};
+    flags[19] = 1;          // Fine Estimated Angular Rates
+    flags[69] = 1;          // Rate Sensor Rates
+    flags[61] = 1;          // Magnetometer Measurement
+    uint16_t period = 10;   // 10s Period
+    uint8_t sd_card = 0;    // Primary SD Card 1
+    uint8_t log = 1;        // Log 1
 
-    vPortFree(control);
+    test_returnState = ADCS_set_log_config(flags, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+    }
+    
+    test_returnState = ADCS_set_log_config(flags, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_get_log_config returned %d \n", test_returnState);
+    }
+
+    for (int i = 0; i < 80, i++){
+        if (flags[i] != 0)
+        {
+            printf("Bit %d is set\n", i);
+        }
+    }
+
+    printf("Period is %d\n", period);
+    
 }
 
 void commissioning_ang_rate_pitch_angle_est(void){
     
 }
+
+void commissioning_ywheel_ramp_up_test(void){
+
+}
+
+void commissioning_initial_y_momentum_activation(void){
+
+}
+
+void commissioning_y_moment_activ_mag_EKF(void){
+
+}
+
+
 
 //BELOW HERE LIES CODE THAT IS COMMON FOR MULTIPLE PARTS OF BINARY TEST PLAN. THESE FUNCTIONS
 //ARE CALLED BY FUNCTIONS ABOVE HERE, AND SHOULD NOT BE RUN IN ISOLATION
