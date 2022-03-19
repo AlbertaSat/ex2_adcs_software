@@ -1403,6 +1403,65 @@ void binaryTest_CubeWheel3_MCU(void) {
 void commissioning_initial_angular_rates_est(void){
     // Step 1 of 3-axis CubeADCS Commissioning 
     // Determine Initial Angular Rates
+    
+    //* Telemetry Logging 
+    printf("Setting Telemetry Logging\n");
+    
+    uint16_t period = 10;   // 10s Period
+    uint8_t sd_card = 0;    // Primary SD Card 1
+    uint8_t log = 1;        // Log 1
+    
+    uint8_t *flags_arr (uint8_t *)pvPortMalloc(80 * sizeof(uint8_t));
+    if (flags_arr == NULL) {
+        return ADCS_MALLOC_FAILED;
+    }
+
+    for (int i = 0; i < 80; i++) 
+    {
+        flags_arr[i] = 0;
+    }
+
+    flags_arr[54] = 1;   // Estimated Angular Rates
+    flags_arr[69] = 1;   // Rate Sensor Rates
+    flags_arr[65] = 1;   // Magnetometer Measurement
+
+    // Verify Bit Mask
+    printf("0b");
+    for (int i  = 0; i < 80; i++)
+    {
+        printf("%d", flags_arr[i]);
+
+        if ((i + 1) % 8 == 0){
+            printf(" ");
+        }
+    }
+    printf("\n");
+    
+    test_returnState = ADCS_set_log_config(&flags_arr, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+    
+    test_returnState = ADCS_get_log_config(&flags_arr, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_get_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+
+    // Verify Bit Mask again
+    printf("0b");
+    for (int i  = 0; i < 80; i++)
+    {
+        printf("%d", flags_arr[i]);
+
+        if ((i + 1) % 8 == 0){
+            printf(" ");
+        }
+    }
+    printf("\n");
+
+
 
     //* Command Sequence
     // ADCS Run Mode : State = Enabled (1)
@@ -1452,12 +1511,33 @@ void commissioning_initial_angular_rates_est(void){
 
     vPortFree(control);
 
+
     // Set Estimation Mode : Mode = Magnetometer rate filter (2)
     test_returnState = ADCS_set_attitude_estimate_mode(2);
     if(test_returnState != ADCS_OK){
         printf("ADCS_set_power_control returned %d \n", test_returnState);
         while(1);
     }
+
+    
+    // Stop logging after 1 minutes
+    vTaskDelay(pdMS_TO_TICKS(60000));
+    printf("Stopping Telemetry Logging\n");
+    test_returnState = ADCS_set_log_config(&flags_arr, 0, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+
+    vPortFree(flags_arr);
+}
+
+void commissioning_initial_detumbling(void){
+    // Step 2 & 3 of ADCS Commissioning
+    // Initial Detumbling
+
+
+    ADCS_returnState test_returnState = ADCS_OK;
 
 
     //* Telemetry Logging 
@@ -1467,26 +1547,26 @@ void commissioning_initial_angular_rates_est(void){
     uint8_t sd_card = 0;    // Primary SD Card 1
     uint8_t log = 1;        // Log 1
     
-    uint8_t **flags_arr (uint8_t **)pvPortMalloc(80 * sizeof(uint8_t *));
+    uint8_t *flags_arr (uint8_t *)pvPortMalloc(80 * sizeof(uint8_t));
     if (flags_arr == NULL) {
         return ADCS_MALLOC_FAILED;
     }
 
     for (int i = 0; i < 80; i++) 
     {
-        flags_arr[i] = (uint8_t *)pvPortMalloc(sizeof(uint8_t));
-        *(flags_arr[i]) = 0;
+        flags_arr[i] = 0;
     }
 
-    *(flags_arr[54]) = 1;   // Estimated Angular Rates
-    *(flags_arr[69]) = 1;   // Rate Sensor Rates
-    *(flags_arr[65]) = 1;   // Magnetometer Measurement
+    flags_arr[54] = 1;   // Estimated Angular Rates
+    flags_arr[69] = 1;   // Rate Sensor Rates
+    flags_arr[65] = 1;   // Magnetometer Measurement
+    flags_arr[79] = 1;   // Magnetorquer Commands
 
     // Verify Bit Mask
     printf("0b");
     for (int i  = 0; i < 80; i++)
     {
-        printf("%d", *flags_arr[i]);
+        printf("%d", flags_arr[i]);
 
         if ((i + 1) % 8 == 0){
             printf(" ");
@@ -1494,13 +1574,13 @@ void commissioning_initial_angular_rates_est(void){
     }
     printf("\n");
     
-    test_returnState = ADCS_set_log_config(flags_arr, period, sd_card, log);
+    test_returnState = ADCS_set_log_config(&flags_arr, period, sd_card, log);
     if (test_returnState != ADCS_OK){
         printf("ADCS_set_log_config returned %d \n", test_returnState);
         while(1);
     }
     
-    test_returnState = ADCS_get_log_config(flags_arr, period, sd_card, log);
+    test_returnState = ADCS_get_log_config(&flags_arr, period, sd_card, log);
     if (test_returnState != ADCS_OK){
         printf("ADCS_get_log_config returned %d \n", test_returnState);
         while(1);
@@ -1510,7 +1590,7 @@ void commissioning_initial_angular_rates_est(void){
     printf("0b");
     for (int i  = 0; i < 80; i++)
     {
-        printf("%d", *flags_arr[i]);
+        printf("%d", flags_arr[i]);
 
         if ((i + 1) % 8 == 0){
             printf(" ");
@@ -1518,28 +1598,10 @@ void commissioning_initial_angular_rates_est(void){
     }
     printf("\n");
 
-    // Log data for 5 minutes
-    vTaskDelay(pdMS_TO_TICKS(300000));
-    printf("Stopping Telemetry Logging\n");
-    test_returnState = ADCS_set_log_config(flags_arr, 0, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_set_log_config returned %d \n", test_returnState);
-        while(1);
-    }
 
-    for (int i = 79; i >= 0; i--){
-        vPortFree(flags_arr[i]);
-    }
-    vPortFree(flags_arr);
-}
-
-void commissioning_initial_detumbling(void){
-    // Step 2 & 3 of ADCS Commissioning
-    // Initial Detumbling
 
     //* Command Sequence
     // ADCS Run Mode : State = Enabled (1)
-    ADCS_returnState test_returnState = ADCS_OK;
     printf("Running ADCS_set_enabled_state to set 1Hz loop (enabled)...\n");
     test_returnState = ADCS_set_enabled_state(1);
     if(test_returnState != ADCS_OK){
@@ -1679,78 +1741,15 @@ void commissioning_initial_detumbling(void){
     
     
 
-    //* Telemetry Logging 
-    printf("Setting Telemetry Logging\n");
-    
-    uint16_t period = 10;   // 10s Period
-    uint8_t sd_card = 0;    // Primary SD Card 1
-    uint8_t log = 1;        // Log 1
-    
-    uint8_t **flags_arr (uint8_t **)pvPortMalloc(80 * sizeof(uint8_t *));
-    if (flags_arr == NULL) {
-        return ADCS_MALLOC_FAILED;
-    }
-
-    for (int i = 0; i < 80; i++) 
-    {
-        flags_arr[i] = (uint8_t *)pvPortMalloc(sizeof(uint8_t));
-        *(flags_arr[i]) = 0;
-    }
-
-    *(flags_arr[54]) = 1;   // Estimated Angular Rates
-    *(flags_arr[69]) = 1;   // Rate Sensor Rates
-    *(flags_arr[65]) = 1;   // Magnetometer Measurement
-    *(flags_arr[79]) = 1;   // Magnetorquer Commands
-
-    // Verify Bit Mask
-    printf("0b");
-    for (int i  = 0; i < 80; i++)
-    {
-        printf("%d", *flags_arr[i]);
-
-        if ((i + 1) % 8 == 0){
-            printf(" ");
-        }
-    }
-    printf("\n");
-    
-    test_returnState = ADCS_set_log_config(flags_arr, period, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_set_log_config returned %d \n", test_returnState);
-        while(1);
-    }
-    
-    test_returnState = ADCS_get_log_config(flags_arr, period, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_get_log_config returned %d \n", test_returnState);
-        while(1);
-    }
-
-    // Verify Bit Mask again
-    printf("0b");
-    for (int i  = 0; i < 80; i++)
-    {
-        printf("%d", *flags_arr[i]);
-
-        if ((i + 1) % 8 == 0){
-            printf(" ");
-        }
-    }
-    printf("\n");
-
     // Log data for 5 minutes
     vTaskDelay(pdMS_TO_TICKS(300000));
     printf("Stopping Telemetry Logging\n");
-    test_returnState = ADCS_set_log_config(flags_arr, 0, sd_card, log);
+    test_returnState = ADCS_set_log_config(&flags_arr, 0, sd_card, log);
     if (test_returnState != ADCS_OK){
         printf("ADCS_set_log_config returned %d \n", test_returnState);
         while(1);
     }
 
-    
-    for (int i = 79; i >= 0; i--){
-        free(flags_arr[i]);
-    }
     vPortFree(flags_arr);
 
     // All = Off(0)
@@ -1771,6 +1770,65 @@ void commissioning_mag_calibration(void){
     // Prerequisite: All angular rate vector components in range -3 to +3 deg/s
 
     ADCS_returnState test_returnState = ADCS_OK;
+
+
+
+    //* Telemetry Logging
+    printf("Setting Telemetry Logging\n");
+    
+    uint16_t period = 10;   // 10s Period
+    uint8_t sd_card = 0;    // Primary SD Card 1
+    uint8_t log = 1;        // Log 1
+    
+    uint8_t *flags_arr (uint8_t *)pvPortMalloc(80 * sizeof(uint8_t));
+    if (flags_arr == NULL) {
+        return ADCS_MALLOC_FAILED;
+    }
+
+    for (int i = 0; i < 80; i++) 
+    {
+        flags_arr[i] = 0
+    }
+
+    flags_arr[19] = 1;   // Fine Estimated Angular Rates
+    flags_arr[69] = 1;   // Rate Sensor Rates
+    flags_arr[65] = 1;   // Magnetometer Measurement
+
+    // Verify Bit Mask
+    printf("0b");
+    for (int i  = 0; i < 80; i++)
+    {
+        printf("%d", flags_arr[i]);
+
+        if ((i + 1) % 8 == 0){
+            printf(" ");
+        }
+    }
+    printf("\n");
+    
+    test_returnState = ADCS_set_log_config(&flags_arr, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+    
+    test_returnState = ADCS_get_log_config(&flags_arr, period, sd_card, log);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_get_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+
+    // Verify Bit Mask again
+    printf("0b");
+    for (int i  = 0; i < 80; i++)
+    {
+        printf("%d", flags_arr[i]);
+
+        if ((i + 1) % 8 == 0){
+            printf(" ");
+        }
+    }
+    printf("\n");
 
     printf("Running ADCS_set_enabled_state to set 1Hz loop (enabled)...\n");
     test_returnState = ADCS_set_enabled_state(1);
@@ -1854,77 +1912,16 @@ void commissioning_mag_calibration(void){
 
 
 
-    //* Telemetry Logging
-    printf("Setting Telemetry Logging\n");
-    
-    uint16_t period = 10;   // 10s Period
-    uint8_t sd_card = 0;    // Primary SD Card 1
-    uint8_t log = 1;        // Log 1
-    
-    uint8_t **flags_arr (uint8_t **)pvPortMalloc(80 * sizeof(uint8_t *));
-    if (flags_arr == NULL) {
-        return ADCS_MALLOC_FAILED;
-    }
-
-    for (int i = 0; i < 80; i++) 
-    {
-        flags_arr[i] = (uint8_t *)pvPortMalloc(sizeof(uint8_t));
-        *(flags_arr[i]) = 0;
-    }
-
-    *(flags_arr[19]) = 1;   // Fine Estimated Angular Rates
-    *(flags_arr[69]) = 1;   // Rate Sensor Rates
-    *(flags_arr[65]) = 1;   // Magnetometer Measurement
-
-    // Verify Bit Mask
-    printf("0b");
-    for (int i  = 0; i < 80; i++)
-    {
-        printf("%d", *flags_arr[i]);
-
-        if ((i + 1) % 8 == 0){
-            printf(" ");
-        }
-    }
-    printf("\n");
-    
-    test_returnState = ADCS_set_log_config(flags_arr, period, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_set_log_config returned %d \n", test_returnState);
-        while(1);
-    }
-    
-    test_returnState = ADCS_get_log_config(flags_arr, period, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_get_log_config returned %d \n", test_returnState);
-        while(1);
-    }
-
-    // Verify Bit Mask again
-    printf("0b");
-    for (int i  = 0; i < 80; i++)
-    {
-        printf("%d", *flags_arr[i]);
-
-        if ((i + 1) % 8 == 0){
-            printf(" ");
-        }
-    }
-    printf("\n");
 
     // Log data for 5 minutes
     vTaskDelay(pdMS_TO_TICKS(300000));
     printf("Stopping Telemetry Logging\n");
-    test_returnState = ADCS_set_log_config(flags_arr, 0, sd_card, log);
+    test_returnState = ADCS_set_log_config(&flags_arr, 0, sd_card, log);
     if (test_returnState != ADCS_OK){
         printf("ADCS_set_log_config returned %d \n", test_returnState);
         while(1);
     }
 
-    
-    for (int i = 79; i >= 0; i--){
-        free(flags_arr[i]);
-    }
     vPortFree(flags_arr);
 
     // All = Off(0)
