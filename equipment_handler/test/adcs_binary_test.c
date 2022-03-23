@@ -1702,8 +1702,9 @@ void commissioning_initial_detumbling(void){
         while(1);
     }
 
-    // Tilt ADCS 45 degrees about each axis for 30*5000ms = 1 min
-    for (int i = 0; i < 30; i++)
+    // Tilt ADCS 45 degrees about each axis for 12*5000ms = 1 min
+    // Output rates on serial monitor every 5000ms
+    for (int i = 0; i < 12; i++)
     { 
         printf("Running ADCS_get_measurements...\n");
         test_returnState = ADCS_get_measurements(measurements);
