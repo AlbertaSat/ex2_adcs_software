@@ -42,6 +42,24 @@ void commissioning_initial_detumbling(void);
 void commissioning_mag_calibration(void);
 void commissioning_ang_rate_pitch_angle_est(void);
 
+// ADCS Run modes
+#define ONEHZ_LOOP_ENABLE       1
+
+// Att. Est. modes
+#define MEMS_RATE_SENSING_MODE  1
+#define MAG_RATE_FILTER_MODE    2
+
+//Att. Ctrl. modes
+#define DETUMBLING_MODE     1
+#define Y_THOMSON_MODE      2
+
+// TLM Logging 
+#define TLM_LOG_SDCARD_0    0
+#define TLM_LOG_PERIOD_10s  10
+#define TLM_LOG_PERIOD_STOP 0
+#define TLM_LOG_1           1
+
+
 void binaryTest(void) {//TODO: add enums for all adcs_handler functions called
 
 //    printf("Running Bootloader Tests");
@@ -52,9 +70,9 @@ void binaryTest(void) {//TODO: add enums for all adcs_handler functions called
 //    binaryTest_CubeACP();
 //    printf("CubeACP Tests Complete!");
 //
-    printf("CubeSense 1 Tests");
-    binaryTest_CubeSense1();
-    printf("CubeSense 1 Tests Complete!");
+    // printf("CubeSense 1 Tests");
+    // binaryTest_CubeSense1();
+    // printf("CubeSense 1 Tests Complete!");
 
 //    printf("CubeSense 2 Tests");
 //    binaryTest_CubeSense2();
@@ -1404,80 +1422,23 @@ void commissioning_initial_angular_rates_est(void){
     // Step 1 of 3-axis CubeADCS Commissioning 
     // Determine Initial Angular Rates
     
-    //* Telemetry Logging 
-    printf("Setting Telemetry Logging\n");
-    
-    uint16_t period = 10;   // 10s Period
-    uint8_t sd_card = 0;    // Primary SD Card 1
-    uint8_t log = 1;        // Log 1
-    
-    uint8_t *flags_arr (uint8_t *)pvPortMalloc(80 * sizeof(uint8_t));
-    if (flags_arr == NULL) {
-        return ADCS_MALLOC_FAILED;
-    }
-
-    for (int i = 0; i < 80; i++) 
-    {
-        flags_arr[i] = 0;
-    }
-
-    flags_arr[54] = 1;   // Estimated Angular Rates
-    flags_arr[69] = 1;   // Rate Sensor Rates
-    flags_arr[65] = 1;   // Magnetometer Measurement
-
-    // Verify Bit Mask
-    printf("0b");
-    for (int i  = 0; i < 80; i++)
-    {
-        printf("%d", flags_arr[i]);
-
-        if ((i + 1) % 8 == 0){
-            printf(" ");
-        }
-    }
-    printf("\n");
-    
-    test_returnState = ADCS_set_log_config(&flags_arr, period, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_set_log_config returned %d \n", test_returnState);
-        while(1);
-    }
-    
-    test_returnState = ADCS_get_log_config(&flags_arr, period, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_get_log_config returned %d \n", test_returnState);
-        while(1);
-    }
-
-    // Verify Bit Mask again
-    printf("0b");
-    for (int i  = 0; i < 80; i++)
-    {
-        printf("%d", flags_arr[i]);
-
-        if ((i + 1) % 8 == 0){
-            printf(" ");
-        }
-    }
-    printf("\n");
+    ADCS_returnState test_returnState = ADCS_OK;
 
 
 
     //* Command Sequence
     // ADCS Run Mode : State = Enabled (1)
     printf("Running ADCS_set_enabled_state to set 1Hz loop (enabled)...\n");
-    test_returnState = ADCS_set_enabled_state(1);
+    test_returnState = ADCS_set_enabled_state(ONEHZ_LOOP_ENABLE);
     if(test_returnState != ADCS_OK){
         printf("ADCS_set_enabled_state returned %d \n", test_returnState);
         while(1);
     }
 
 
+
     // Power Control : CubeControl Signal and/or Motor Power = On (1), All others = Off (0)
-    uint8_t *control = (uint8_t*)pvPortMalloc(10);
-    if (control == NULL) {
-        return ADCS_MALLOC_FAILED;
-    }
+    uint8_t control[10] = {0};
 
     // Verify Power State(s) 
     printf("Running ADCS_get_power_control...\n");
@@ -1509,58 +1470,27 @@ void commissioning_initial_angular_rates_est(void){
         printf("control[%d] = %d \n", i, control[i]);
     }
 
-    vPortFree(control);
-
 
     // Set Estimation Mode : Mode = Magnetometer rate filter (2)
-    test_returnState = ADCS_set_attitude_estimate_mode(2);
+    test_returnState = ADCS_set_attitude_estimate_mode(MAG_RATE_FILTER_MODE);
     if(test_returnState != ADCS_OK){
         printf("ADCS_set_power_control returned %d \n", test_returnState);
         while(1);
     }
 
-    
-    // Stop logging after 1 minutes
-    vTaskDelay(pdMS_TO_TICKS(60000));
-    printf("Stopping Telemetry Logging\n");
-    test_returnState = ADCS_set_log_config(&flags_arr, 0, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_set_log_config returned %d \n", test_returnState);
-        while(1);
-    }
-
-    vPortFree(flags_arr);
-}
-
-void commissioning_initial_detumbling(void){
-    // Step 2 & 3 of ADCS Commissioning
-    // Initial Detumbling
 
 
-    ADCS_returnState test_returnState = ADCS_OK;
 
 
     //* Telemetry Logging 
     printf("Setting Telemetry Logging\n");
     
-    uint16_t period = 10;   // 10s Period
-    uint8_t sd_card = 0;    // Primary SD Card 1
-    uint8_t log = 1;        // Log 1
-    
-    uint8_t *flags_arr (uint8_t *)pvPortMalloc(80 * sizeof(uint8_t));
-    if (flags_arr == NULL) {
-        return ADCS_MALLOC_FAILED;
-    }
-
-    for (int i = 0; i < 80; i++) 
-    {
-        flags_arr[i] = 0;
-    }
+    uint8_t flags_arr[80] = {0};
+    uint8_t *flags_arr_ptr = flags_arr;
 
     flags_arr[54] = 1;   // Estimated Angular Rates
     flags_arr[69] = 1;   // Rate Sensor Rates
     flags_arr[65] = 1;   // Magnetometer Measurement
-    flags_arr[79] = 1;   // Magnetorquer Commands
 
     // Verify Bit Mask
     printf("0b");
@@ -1574,13 +1504,13 @@ void commissioning_initial_detumbling(void){
     }
     printf("\n");
     
-    test_returnState = ADCS_set_log_config(&flags_arr, period, sd_card, log);
+    test_returnState = ADCS_set_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_10s, TLM_LOG_SDCARD_0, TLM_LOG_1);
     if (test_returnState != ADCS_OK){
         printf("ADCS_set_log_config returned %d \n", test_returnState);
         while(1);
     }
     
-    test_returnState = ADCS_get_log_config(&flags_arr, period, sd_card, log);
+    test_returnState = ADCS_get_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_10s, TLM_LOG_SDCARD_0, TLM_LOG_1);
     if (test_returnState != ADCS_OK){
         printf("ADCS_get_log_config returned %d \n", test_returnState);
         while(1);
@@ -1600,10 +1530,40 @@ void commissioning_initial_detumbling(void){
 
 
 
+    
+    // Stop logging after 1 minutes
+    vTaskDelay(pdMS_TO_TICKS(60000));
+    printf("Stopping Telemetry Logging\n");
+    test_returnState = ADCS_set_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_STOP, TLM_LOG_SDCARD_0, TLM_LOG_1);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+
+
+    // Power All = Off(0)
+    control[Set_CubeCTRLSgn_Power] = 0;
+    control[Set_CubeCTRLMtr_Power] = 0;
+    test_returnState = ADCS_set_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+
+}
+
+void commissioning_initial_detumbling(void){
+    // Step 2 & 3 of ADCS Commissioning
+    // Initial Detumbling
+
+    ADCS_returnState test_returnState = ADCS_OK;
+
+
+
     //* Command Sequence
     // ADCS Run Mode : State = Enabled (1)
     printf("Running ADCS_set_enabled_state to set 1Hz loop (enabled)...\n");
-    test_returnState = ADCS_set_enabled_state(1);
+    test_returnState = ADCS_set_enabled_state(ONEHZ_LOOP_ENABLE);
     if(test_returnState != ADCS_OK){
         printf("ADCS_set_enabled_state returned %d \n", test_returnState);
         while(1);
@@ -1611,10 +1571,7 @@ void commissioning_initial_detumbling(void){
 
 
     // Power Control : CubeControl Signal and/or Motor Power = On (1), All others = Off (0)
-    uint8_t *control = (uint8_t*)pvPortMalloc(10);
-    if (control == NULL) {
-        return ADCS_MALLOC_FAILED;
-    }
+    uint8_t control[10] = {0};
 
     // Verify Power State(s) 
     printf("Running ADCS_get_power_control...\n");
@@ -1650,7 +1607,7 @@ void commissioning_initial_detumbling(void){
 
 
     // Set Estimation Mode : Mode = Magnetometer rate filter (2) or MEMS rate sensing (1)
-    test_returnState = ADCS_set_attitude_estimate_mode(1);
+    test_returnState = ADCS_set_attitude_estimate_mode(MEMS_RATE_SENSING_MODE);
     if(test_returnState != ADCS_OK){
         printf("ADCS_get_power_control returned %d \n", test_returnState);
         while(1);
@@ -1665,134 +1622,18 @@ void commissioning_initial_detumbling(void){
     }
     printf("att_ctrl_mode = %d \n", test_adcs_state.att_ctrl_mode);
     
-    // Initial Activation 1 (Detumbling, 600s)
-    printf("Initial Activation 1 : Detumbling\n");
-    printf("Running ADCS_set_attitude_ctrl_mode...\n");
-    test_returnState = ADCS_set_attitude_ctrl_mode(1, 600);
-    if(test_returnState != ADCS_OK){
-        printf("ADCS_set_attitude_ctrl_mode returned %d \n", test_returnState);
-        while(1);
-    }
-
-    // Verify Control Mode
-    printf("Running ADCS_get_current_state...\n");
-    test_returnState = ADCS_get_current_state(&test_adcs_state);
-    if(test_returnState != ADCS_OK){
-        printf("ADCS_get_current_state returned %d \n", test_returnState);
-        while(1);
-    }
-    printf("att_ctrl_mode = %d \n", test_adcs_state.att_ctrl_mode);
 
 
-    // Tilt ADCS 45 degrees about each axis
-    // Verify angular rates
-    adcs_measures *measurements;
-    measurements = (adcs_measures *)pvPortMalloc(sizeof(adcs_measures));
-    if (measurements == NULL) {
-        printf("malloc issues");
-        while(1);
-    }
-
-    for(int i = 0; i<15; i++){//repeating 5 times for each axis = 15 times
-        printf("Running ADCS_get_measurements...\n");
-        test_returnState = ADCS_get_measurements(measurements);
-        if(test_returnState != ADCS_OK){
-            printf("ADCS_get_measurements returned %d \n", test_returnState);
-            while(1);
-        }
-        printf("Angular Rate X = %+f \n", measurements->angular_rate.x);//not 100% sure if this will print the sign of the float
-        printf("Angular Rate Y = %+f \n", measurements->angular_rate.y);
-        printf("Angular Rate Z = %+f \n", measurements->angular_rate.z);
-    }
-
-
-    // Final Activation (Y-Thomson, 0s)
-    printf("Final Activation : Y-Thomson\n")
-    printf("Running ADCS_set_attitude_ctrl_mode...\n");
-    test_returnState = ADCS_set_attitude_ctrl_mode(2, 0);//no timeout (infinite time)
-    if(test_returnState != ADCS_OK){
-        printf("ADCS_set_attitude_ctrl_mode returned %d \n", test_returnState);
-        while(1);
-    }
-
-    // Verify Control Mode
-    printf("Running ADCS_get_current_state...\n");
-    test_returnState = ADCS_get_current_state(&test_adcs_state);
-    if(test_returnState != ADCS_OK){
-        printf("ADCS_get_current_state returned %d \n", test_returnState);
-        while(1);
-    }
-    printf("att_ctrl_mode = %d \n", test_adcs_state.att_ctrl_mode);
-
-
-    for(int i = 0; i<15; i++){//repeating 5 times for each axis = 15 times
-        printf("Running ADCS_get_measurements...\n");
-        test_returnState = ADCS_get_measurements(measurements);
-        if(test_returnState != ADCS_OK){
-            printf("ADCS_get_measurements returned %d \n", test_returnState);
-            while(1);
-        }
-        printf("Angular Rate X = %+f \n", measurements->angular_rate.x);//not 100% sure if this will print the sign of the float
-        printf("Angular Rate Y = %+f \n", measurements->angular_rate.y);
-        printf("Angular Rate Z = %+f \n", measurements->angular_rate.z);
-    }
-    
-    vPortFree(measurements);
-    
-    
-
-    // Log data for 5 minutes
-    vTaskDelay(pdMS_TO_TICKS(300000));
-    printf("Stopping Telemetry Logging\n");
-    test_returnState = ADCS_set_log_config(&flags_arr, 0, sd_card, log);
-    if (test_returnState != ADCS_OK){
-        printf("ADCS_set_log_config returned %d \n", test_returnState);
-        while(1);
-    }
-
-    vPortFree(flags_arr);
-
-    // All = Off(0)
-    control[Set_CubeCTRLSgn_Power] = 0;
-    control[Set_CubeCTRLMtr_Power] = 0;
-    test_returnState = ADCS_set_power_control(control);
-    if(test_returnState != ADCS_OK){
-        printf("ADCS_set_power_control returned %d \n", test_returnState);
-        while(1);
-    }
-
-    vPortFree(control);
-}
-
-void commissioning_mag_calibration(void){
-    // Step 5 of ADCS Commissioning
-    // Magnetometer Calibration
-    // Prerequisite: All angular rate vector components in range -3 to +3 deg/s
-
-    ADCS_returnState test_returnState = ADCS_OK;
-
-
-
-    //* Telemetry Logging
+    //* Telemetry Logging 
     printf("Setting Telemetry Logging\n");
     
-    uint16_t period = 10;   // 10s Period
-    uint8_t sd_card = 0;    // Primary SD Card 1
-    uint8_t log = 1;        // Log 1
-    
-    uint8_t *flags_arr (uint8_t *)pvPortMalloc(80 * sizeof(uint8_t));
-    if (flags_arr == NULL) {
-        return ADCS_MALLOC_FAILED;
-    }
+    uint8_t flags_arr[80] = {0};
+    uint8_t *flags_arr_ptr = flags_arr;
 
-    for (int i = 0; i < 80; i++) 
-    {
-        flags_arr[i] = 0
-    }
-
-    flags_arr[19] = 1;   // Fine Estimated Angular Rates
+    flags_arr[54] = 1;   // Estimated Angular Rates
     flags_arr[69] = 1;   // Rate Sensor Rates
     flags_arr[65] = 1;   // Magnetometer Measurement
+    flags_arr[79] = 1;   // Magnetorquer Commands
 
     // Verify Bit Mask
     printf("0b");
@@ -1806,13 +1647,13 @@ void commissioning_mag_calibration(void){
     }
     printf("\n");
     
-    test_returnState = ADCS_set_log_config(&flags_arr, period, sd_card, log);
+    test_returnState = ADCS_set_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_10s, TLM_LOG_SDCARD_0, TLM_LOG_1);
     if (test_returnState != ADCS_OK){
         printf("ADCS_set_log_config returned %d \n", test_returnState);
         while(1);
     }
     
-    test_returnState = ADCS_get_log_config(&flags_arr, period, sd_card, log);
+    test_returnState = ADCS_get_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_10s, TLM_LOG_SDCARD_0, TLM_LOG_1);
     if (test_returnState != ADCS_OK){
         printf("ADCS_get_log_config returned %d \n", test_returnState);
         while(1);
@@ -1830,8 +1671,103 @@ void commissioning_mag_calibration(void){
     }
     printf("\n");
 
+
+
+
+
+    // Initial Activation 1 (Detumbling, 600s)
+    printf("Initial Activation 1 : Detumbling\n");
+    printf("Running ADCS_set_attitude_ctrl_mode...\n");
+    test_returnState = ADCS_set_attitude_ctrl_mode(DETUMBLING_MODE, 600);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_attitude_ctrl_mode returned %d \n", test_returnState);
+        while(1);
+    }
+
+    // Verify Control Mode
+    printf("Running ADCS_get_current_state...\n");
+    test_returnState = ADCS_get_current_state(&test_adcs_state);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_get_current_state returned %d \n", test_returnState);
+        while(1);
+    }
+    printf("att_ctrl_mode = %d \n", test_adcs_state.att_ctrl_mode);
+
+
+    // Begin verifying angular rates
+    adcs_measures *measurements;
+    measurements = (adcs_measures *)pvPortMalloc(sizeof(adcs_measures));
+    if (measurements == NULL) {
+        printf("malloc issues");
+        while(1);
+    }
+
+    // Tilt ADCS 45 degrees about each axis for 30*5000ms = 1 min
+    for (int i = 0; i < 30; i++)
+    { 
+        printf("Running ADCS_get_measurements...\n");
+        test_returnState = ADCS_get_measurements(measurements);
+        if(test_returnState != ADCS_OK){
+            printf("ADCS_get_measurements returned %d \n", test_returnState);
+            while(1);
+        }
+        printf("Angular Rate X = %+f \n", measurements->angular_rate.x);//not 100% sure if this will print the sign of the float
+        printf("Angular Rate Y = %+f \n", measurements->angular_rate.y);
+        printf("Angular Rate Z = %+f \n", measurements->angular_rate.z);
+        vTaskDelay(pdMS_TO_TICKS(5000));
+    }
+    
+    free(measurements);
+
+    printf("Stopping Telemetry Logging\n");
+    test_returnState = ADCS_set_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_STOP, TLM_LOG_SDCARD_0, TLM_LOG_1);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+
+
+
+    //// Final Activation (Y-Thomson, 0s)
+    //// printf("Final Activation : Y-Thomson\n")
+    //// printf("Running ADCS_set_attitude_ctrl_mode...\n");
+    //// test_returnState = ADCS_set_attitude_ctrl_mode(2, 0);//no timeout (infinite time)
+    //// if(test_returnState != ADCS_OK){
+    ////     printf("ADCS_set_attitude_ctrl_mode returned %d \n", test_returnState);
+    ////     while(1);
+    //// }
+
+    //// Verify Control Mode
+    //// printf("Running ADCS_get_current_state...\n");
+    //// test_returnState = ADCS_get_current_state(&test_adcs_state);
+    //// if(test_returnState != ADCS_OK){
+    ////     printf("ADCS_get_current_state returned %d \n", test_returnState);
+    ////     while(1);
+    //// }
+    //// printf("att_ctrl_mode = %d \n", test_adcs_state.att_ctrl_mode);
+
+
+    // All = Off(0)
+    control[Set_CubeCTRLSgn_Power] = 0;
+    control[Set_CubeCTRLMtr_Power] = 0;
+    test_returnState = ADCS_set_power_control(control);
+    if(test_returnState != ADCS_OK){
+        printf("ADCS_set_power_control returned %d \n", test_returnState);
+        while(1);
+    }
+
+}
+
+void commissioning_mag_calibration(void){
+    // Step 5 of ADCS Commissioning
+    // Magnetometer Calibration
+    // Prerequisite: All angular rate vector components in range -3 to +3 deg/s
+
+    ADCS_returnState test_returnState = ADCS_OK;
+
+
     printf("Running ADCS_set_enabled_state to set 1Hz loop (enabled)...\n");
-    test_returnState = ADCS_set_enabled_state(1);
+    test_returnState = ADCS_set_enabled_state(ONEHZ_LOOP_ENABLE);
     if(test_returnState != ADCS_OK){
         printf("ADCS_set_enabled_state returned %d \n", test_returnState);
         while(1);
@@ -1840,10 +1776,7 @@ void commissioning_mag_calibration(void){
 
 
     // Power Control : CubeControl Signal and/or Motor Power = On (1), All others = Off (0)
-    uint8_t *control = (uint8_t*)pvPortMalloc(10);
-    if (control == NULL) {
-        return ADCS_MALLOC_FAILED;
-    }
+    uint8_t control[10] = {0};
 
     // Verify Power State(s) 
     printf("Running ADCS_get_power_control...\n");
@@ -1874,17 +1807,63 @@ void commissioning_mag_calibration(void){
     for(int i = 0; i<10; i++){
         printf("control[%d] = %d \n", i, control[i]);
     }
-
-    vPortFree(control);
     
 
 
     // Set Estimation Mode  : Mode =  Magnetometer Rate Estimator (2)
-    test_returnState = ADCS_set_attitude_estimate_mode(2);
+    test_returnState = ADCS_set_attitude_estimate_mode(MAG_RATE_FILTER_MODE);
     if(test_returnState != ADCS_OK){
         printf("ADCS_get_power_control returned %d \n", test_returnState);
         while(1);
     }
+
+
+
+    //* Telemetry Logging
+    printf("Setting Telemetry Logging\n");
+    
+    uint8_t flags_arr[80] = {0};
+    uint8_t *flags_arr_ptr = flags_arr;
+
+    flags_arr[19] = 1;   // Fine Estimated Angular Rates
+    flags_arr[69] = 1;   // Rate Sensor Rates
+    flags_arr[65] = 1;   // Magnetometer Measurements (Calibrated at this point)
+
+    // Verify Bit Mask
+    printf("0b");
+    for (int i  = 0; i < 80; i++)
+    {
+        printf("%d", flags_arr[i]);
+
+        if ((i + 1) % 8 == 0){
+            printf(" ");
+        }
+    }
+    printf("\n");
+    
+    test_returnState = ADCS_set_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_10s, TLM_LOG_SDCARD_0, TLM_LOG_1);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_set_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+    
+    test_returnState = ADCS_get_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_10s, TLM_LOG_SDCARD_0, TLM_LOG_1);
+    if (test_returnState != ADCS_OK){
+        printf("ADCS_get_log_config returned %d \n", test_returnState);
+        while(1);
+    }
+
+    // Verify Bit Mask again
+    printf("0b");
+    for (int i  = 0; i < 80; i++)
+    {
+        printf("%d", flags_arr[i]);
+
+        if ((i + 1) % 8 == 0){
+            printf(" ");
+        }
+    }
+    printf("\n");
 
 
 
@@ -1893,17 +1872,27 @@ void commissioning_mag_calibration(void){
     // On-ground Processing
 
 
+    //*  Confirm following:
+    //Set Mag Config
+    // mtm_config mag_config;
+    
+    // Deployed Mag angles
+    // mag_config.mounting_angle.z = 0;    // Alpha  = 0 Deg    
+    // mag_config.mounting_angle.y = 90;   // Beta   = 90 Deg
+    // mag_config.mounting_angle.x = 90;   // Gamma  = 90 Deg
 
-    // Set Mag Config
-    // test_returnState = ADCS_set_mtm_config();
+    // mag_config.channel_offset.z = 0;       
+    // mag_config.channel_offset.y = 0;   
+    // mag_config.channel_offset.x = 0;   
+    // mag_config.sensitivity_mat = {0};
+
+    // test_returnState = ADCS_set_mtm_config(mag_config, 1);
     // if(test_returnState != ADCS_OK){
     //     printf("ADCS_set_mtm_config returned %d \n", test_returnState);
     //     while(1);
     // }
 
-
-
-    // Save Configuration
+    // // Save Configuration
     // test_returnState = ADCS_save_config();
     // if(test_returnState != ADCS_OK){
     //     printf("ADCS_save_config returned %d \n", test_returnState);
@@ -1913,16 +1902,14 @@ void commissioning_mag_calibration(void){
 
 
 
-    // Log data for 5 minutes
-    vTaskDelay(pdMS_TO_TICKS(300000));
+    // Log data for 1 minute
+    vTaskDelay(pdMS_TO_TICKS(ONE_MINUTE));
     printf("Stopping Telemetry Logging\n");
-    test_returnState = ADCS_set_log_config(&flags_arr, 0, sd_card, log);
+    test_returnState = ADCS_set_log_config(&flags_arr_ptr, TLM_LOG_PERIOD_STOP, TLM_LOG_SDCARD_0, TLM_LOG_1);
     if (test_returnState != ADCS_OK){
         printf("ADCS_set_log_config returned %d \n", test_returnState);
         while(1);
     }
-
-    vPortFree(flags_arr);
 
     // All = Off(0)
     control[Set_CubeCTRLSgn_Power] = 0;
@@ -1932,8 +1919,6 @@ void commissioning_mag_calibration(void){
         printf("ADCS_set_power_control returned %d \n", test_returnState);
         while(1);
     }
-
-    vPortFree(control);
     
 }
 
