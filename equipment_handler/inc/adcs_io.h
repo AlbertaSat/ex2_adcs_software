@@ -16,6 +16,7 @@
 #define ADCS_IO_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include "adcs_types.h"
 #include "adcs_handler.h"
 #include "FreeRTOS.h"
@@ -42,6 +43,7 @@ ADCS_returnState request_uart_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint3
 ADCS_returnState request_i2c_telemetry(uint8_t TM_ID, uint8_t *telemetry, uint32_t length);
 
 // receive downloaded packets over uart
-ADCS_returnState receive_uart_packet(uint8_t *hole_map, uint8_t *image_bytes);
+ADCS_returnState receive_file_download_uart_packet(uint8_t *pckt, uint16_t *pckt_counter);
+void write_pckt_to_file(uint32_t file_des, uint8_t *pkt_data, uint8_t length);
 
 #endif /* ADCS_IO_H */

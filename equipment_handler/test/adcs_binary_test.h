@@ -15,22 +15,21 @@
 #include "FreeRTOS.h"
 
 // ADCS Run modes
-#define ONEHZ_LOOP_ENABLE       1
+#define ONEHZ_LOOP_ENABLE 1
 
 // Att. Est. modes
-#define MEMS_RATE_SENSING_MODE  1
-#define MAG_RATE_FILTER_MODE    2
+#define MEMS_RATE_SENSING_MODE 1
+#define MAG_RATE_FILTER_MODE 2
 
-//Att. Ctrl. modes
-#define DETUMBLING_MODE     1
-#define Y_THOMSON_MODE      2
+// Att. Ctrl. modes
+#define DETUMBLING_MODE 1
+#define Y_THOMSON_MODE 2
 
-// TLM Logging 
-#define TLM_LOG_SDCARD_0    0
-#define TLM_LOG_PERIOD_10s  10
+// TLM Logging
+#define TLM_LOG_SDCARD_0 0
+#define TLM_LOG_PERIOD_10s 10
 #define TLM_LOG_PERIOD_STOP 0
-#define TLM_LOG_1           1
-
+#define TLM_LOG_1 1
 
 void binaryTest(void);
 
